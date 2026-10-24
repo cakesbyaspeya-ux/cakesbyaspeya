@@ -20,16 +20,14 @@ export default async function HomePage() {
             <span className="inline-block rounded-full bg-burgundy/10 px-3 py-1 text-xs font-medium tracking-wide text-burgundy">
               Fresh-baked in Chittagong
             </span>
-            <h1 className="mt-5 font-display text-4xl leading-tight text-ink md:text-5xl lg:text-6xl">
-              Cakes by <span className="text-burgundy">Aspeya</span>
-            </h1>
             <p className="mt-4 max-w-md text-base leading-relaxed text-olive-dark md:text-lg">
-              Custom cakes, cheesecakes, and desserts — baked fresh with love
-              in Chittagong. Delivered to your door, or ready for pickup.
-            </p>
-            <p className="mt-2 text-sm text-olive-dark/80">
-              Minimum 24 hours advance order.
-            </p>
+  From custom cakes and creamy cheesecakes to delightful desserts, every
+  treat is freshly baked with love and crafted to make your moments extra
+  special. Enjoy convenient doorstep delivery or pick up your order fresh.
+</p>
+<p className="mt-2 text-sm text-olive-dark/80">
+  Please place your order at least 24 hours in advance.
+</p>
 
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
