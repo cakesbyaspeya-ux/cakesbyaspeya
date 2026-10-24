@@ -52,9 +52,12 @@ export function buildOrderMessage(o: OrderPayload, pickupAddress: string): strin
         `Address: ${o.address || 'Not specified'}`,
       ];
 
-  // Generate the live tracking link
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cakesbyaspeya.com';
-  const trackingLink = `${siteUrl}/track/${o.reference}`;
+  // 👇 CHANGED HERE: Default fallback is now the vercel.app domain
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cakesbyaspeya.vercel.app';
+  
+  // Clean up the URL to make sure it starts with https:// and doesn't have a trailing slash
+  const formattedUrl = (siteUrl.startsWith('http') ? siteUrl : `https://${siteUrl}`).replace(/\/$/, '');
+  const trackingLink = `${formattedUrl}/track/${o.reference}`;
 
   return [
     `Order Reference: ${o.reference}`,
