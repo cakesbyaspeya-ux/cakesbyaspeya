@@ -19,7 +19,9 @@ export function ProductDetailClient({ product }: { product: any }) {
   const [flavourId, setFlavourId] = useState<string | null>(product.flavours[0]?.id ?? null);
   const [cakeMessage, setCakeMessage] = useState('');
   const [qty, setQty] = useState(1);
-  const [activeImageIndex, setActiveImageIndex] = useState(0); // <-- Add this
+  
+  // State for the selected design
+  const [activeImageIndex, setActiveImageIndex] = useState(0); 
   const [added, setAdded] = useState(false);
 
   // Find the selected objects to calculate price
@@ -36,11 +38,14 @@ export function ProductDetailClient({ product }: { product: any }) {
   }, [selectedSize, selectedVariant, selectedFlavour, product.base_price]);
 
   function handleAdd() {
+    // Save the exact image the user selected to the cart
+    const selectedImage = product.images[activeImageIndex] || product.images[0] || '';
+
     add({
       product_id: product.id,
       product_slug: product.slug,
       product_name: product.name,
-            image: product.images[activeImageIndex] || product.images[0] || '', // <-- Add activeImageIndex
+      image: selectedImage, // <-- This is the specific design
       variant: selectedVariant?.name ?? null,
       flavour: selectedFlavour?.name ?? null,
       size_label: selectedSize?.label ?? null,
@@ -58,21 +63,35 @@ export function ProductDetailClient({ product }: { product: any }) {
       <div className="grid gap-10 md:grid-cols-2">
         {/* LEFT: Image Gallery */}
         <div className="space-y-4">
+          
+          {/* Main Slideshow */}
           <ImageSlideshow 
             images={product.images} 
             alt={product.name} 
-            onIndexChange={setActiveImageIndex} // <-- Add this
+            currentIndex={activeImageIndex}
+            onIndexChange={setActiveImageIndex}
           />
-          {/* Thumbnails */}
+          
+          {/* Clickable Thumbnails */}
           {product.images.length > 1 && (
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-4 gap-3">
               {product.images.map((img: string, i: number) => (
-                <div key={i} className="aspect-square overflow-hidden rounded-lg bg-cream-dark">
-                  <img src={img} alt="" className="h-full w-full object-cover" />
-                </div>
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => setActiveImageIndex(i)}
+                  className={`aspect-square overflow-hidden rounded-xl transition-all ${
+                    activeImageIndex === i 
+                      ? 'ring-4 ring-burgundy/40 opacity-100' 
+                      : 'opacity-50 hover:opacity-100'
+                  }`}
+                >
+                  <img src={img} alt={`Design ${i + 1}`} className="h-full w-full object-cover" />
+                </button>
               ))}
             </div>
           )}
+
         </div>
 
         {/* RIGHT: Product Details */}
@@ -159,10 +178,10 @@ export function ProductDetailClient({ product }: { product: any }) {
                 className="w-full rounded-lg border border-olive/30 bg-cream-card px-4 py-2.5 outline-none focus:border-burgundy"
               />
               
-              {/* The Live Preview on the Cake Image */}
-              {product.images[0] && (
+              {/* The Live Preview */}
+              {product.images[activeImageIndex] && (
                 <div className="mt-3 relative aspect-[3/1] overflow-hidden rounded-xl">
-                  <img src={product.images[0]} alt="" className="h-full w-full object-cover opacity-60" />
+                  <img src={product.images[activeImageIndex]} alt="" className="h-full w-full object-cover opacity-60" />
                   <div className="absolute inset-0 flex items-center justify-center">
                     <span className="font-display text-2xl text-cream drop-shadow-lg text-center px-4 italic">
                       {cakeMessage || 'Your message appears here'}

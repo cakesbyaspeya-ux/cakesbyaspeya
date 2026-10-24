@@ -7,31 +7,23 @@ type Props = {
   images: string[];
   alt: string;
   autoMs?: number;
-  onIndexChange?: (index: number) => void; // <-- Added this
+  currentIndex: number;                   // <-- Added: Parent controls index
+  onIndexChange: (index: number) => void; // <-- Added: Parent updates index
 };
 
-export function ImageSlideshow({ images, alt, autoMs = 3500, onIndexChange }: Props) {
-  const [current, setCurrent] = useState(0);
+export function ImageSlideshow({ images, alt, autoMs = 3500, currentIndex, onIndexChange }: Props) {
   const [paused, setPaused] = useState(false);
   const multiple = images.length > 1;
-
-  // Notify parent when image changes
-  useEffect(() => {
-    if (onIndexChange) onIndexChange(current);
-  }, [current, onIndexChange]);
 
   // Auto-advance timer
   useEffect(() => {
     if (!multiple || paused) return;
     const timer = setInterval(() => {
-      setCurrent((p) => (p + 1) % images.length);
+      const nextIndex = (currentIndex + 1) % images.length;
+      onIndexChange(nextIndex);
     }, autoMs);
     return () => clearInterval(timer);
-  }, [multiple, paused, images.length, autoMs]);
-
-  useEffect(() => {
-    if (current >= images.length) setCurrent(0);
-  }, [images.length, current]);
+  }, [multiple, paused, images.length, autoMs, currentIndex, onIndexChange]);
 
   if (images.length === 0) {
     return (
@@ -44,13 +36,7 @@ export function ImageSlideshow({ images, alt, autoMs = 3500, onIndexChange }: Pr
   if (!multiple) {
     return (
       <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-cream-dark">
-        <Image
-          src={images[0]}
-          alt={alt}
-          fill
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-          className="object-cover"
-        />
+        <Image src={images[0]} alt={alt} fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" />
       </div>
     );
   }
@@ -67,22 +53,23 @@ export function ImageSlideshow({ images, alt, autoMs = 3500, onIndexChange }: Pr
           src={src}
           alt={`${alt} — view ${idx + 1}`}
           fill
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          sizes="(max-width: 768px) 100vw, 50vw"
           className={`object-cover transition-opacity duration-700 ease-in-out ${
-            idx === current ? 'opacity-100' : 'opacity-0'
+            idx === currentIndex ? 'opacity-100' : 'opacity-0'
           }`}
         />
       ))}
 
+      {/* Dots */}
       <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5">
         {images.map((_, idx) => (
           <button
             key={idx}
             type="button"
-            onClick={() => setCurrent(idx)}
+            onClick={() => onIndexChange(idx)}
             aria-label={`Show image ${idx + 1}`}
             className={`h-2 rounded-full transition-all ${
-              idx === current ? 'w-5 bg-cream' : 'w-2 bg-cream/60 hover:bg-cream/80'
+              idx === currentIndex ? 'w-5 bg-cream' : 'w-2 bg-cream/60 hover:bg-cream/80'
             }`}
           />
         ))}
