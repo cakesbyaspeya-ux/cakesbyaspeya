@@ -1,7 +1,8 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
-export async function middleware(request: NextRequest) {
+// Next.js 16 requires the function to be named 'proxy'
+export async function proxy(request: NextRequest) {
   let response = NextResponse.next({
     request: { headers: request.headers },
   });
@@ -31,7 +32,7 @@ export async function middleware(request: NextRequest) {
   const isAdminPath = request.nextUrl.pathname.startsWith('/admin');
   const isLoginPath = request.nextUrl.pathname === '/admin/login';
 
-  // If trying to access /admin but not logged in (and NOT on the login page) -> redirect
+  // If trying to access /admin but not logged in -> redirect
   if (isAdminPath && !isLoginPath && !user) {
     return NextResponse.redirect(new URL('/admin/login', request.url));
   }
@@ -45,6 +46,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // Ensure it matches both /admin and /admin/anything
   matcher: ['/admin', '/admin/:path*'],
 };
