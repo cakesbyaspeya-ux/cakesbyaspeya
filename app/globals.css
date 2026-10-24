@@ -1,26 +1,51 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  /* ── Olive Green (primary) ── */
+  --color-olive:         #5C6B3F;
+  --color-olive-dark:    #414D2C;
+  --color-olive-light:   #7C8B5E;
+
+  /* ── Burgundy (accent) ── */
+  --color-burgundy:       #6E1F2E;
+  --color-burgundy-dark:  #4E1420;
+  --color-burgundy-light: #8F2E40;
+
+  /* ── Cream (background) ── */
+  --color-cream:       #FAF3E3;
+  --color-cream-dark:  #F0E4CC;
+  --color-cream-card:  #FFFDF7;
+
+  /* ── Neutrals ── */
+  --color-ink:       #2A2A24;
+  --color-whatsapp:  #25D366;
+
+  /* ── Fonts (populated by next/font in Phase 2.2) ── */
+  --font-display: var(--font-playfair), 'Playfair Display', serif;
+  --font-body:    var(--font-inter), 'Inter', sans-serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* Base styles */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-cream);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Reusable form input */
+.input {
+  width: 100%;
+  border-radius: 0.5rem;
+  border: 1px solid var(--color-olive); /* fallback */
+  border: 1px solid color-mix(in srgb, var(--color-olive) 30%, transparent);
+  background-color: var(--color-cream-card);
+  padding: 0.625rem 1rem;
+  outline: none;
+  transition: border-color 150ms ease;
+}
+
+.input:focus {
+  border-color: var(--color-burgundy);
 }
