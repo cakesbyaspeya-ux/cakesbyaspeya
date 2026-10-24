@@ -2,7 +2,6 @@ import { notFound } from 'next/navigation';
 import { createServerClient } from '@/lib/supabase/server';
 import { ProductDetailClient } from '@/components/product/ProductDetailClient';
 
-// Next.js 16 requires params to be awaited as a Promise
 export default async function CakeDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const sb = await createServerClient();
@@ -12,7 +11,7 @@ export default async function CakeDetailPage({ params }: { params: Promise<{ slu
     .select(`
       id, slug, name, short_desc, long_desc, product_type,
       allows_flavour, allows_cake_message, allows_size, base_price,
-      product_images(url, sort_order),
+      product_images(id, url, sort_order),
       product_sizes(id, label, weight_lb, price, is_default, sort_order),
       product_variants(id, name, price_delta, sort_order),
       product_flavours(flavours(id, name, price_delta))
@@ -25,12 +24,13 @@ export default async function CakeDetailPage({ params }: { params: Promise<{ slu
     notFound();
   }
 
-   const images = (product.product_images ?? [])
+  // MAP IMAGES TO OBJECTS with ID and Label
+  const images = (product.product_images ?? [])
     .sort((a: any, b: any) => a.sort_order - b.sort_order)
     .map((i: any, index: number) => ({
       id: i.id,
       url: i.url,
-      label: `Design ${index + 1}` // Automatically names them Design 1, Design 2, etc.
+      label: `Design ${index + 1}`
     }));
 
   const sizes = (product.product_sizes ?? []).sort((a: any, b: any) => a.sort_order - b.sort_order);
@@ -51,7 +51,7 @@ export default async function CakeDetailPage({ params }: { params: Promise<{ slu
         allows_cake_message: product.allows_cake_message,
         allows_size: product.allows_size,
         base_price: Number(product.base_price),
-        images,
+        images, // <-- Passes the objects with IDs
         sizes,
         variants,
         flavours,

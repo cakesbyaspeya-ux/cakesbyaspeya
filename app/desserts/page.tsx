@@ -1,21 +1,61 @@
-import { getProducts } from '@/lib/products';
-import { ProductCard } from '@/components/product/ProductCard';
+import { notFound } from 'next/navigation';
+import { createServerClient } from '@/lib/supabase/server';
+import { ProductDetailClient } from '@/components/product/ProductDetailClient';
 
-export const metadata = {
-  title: 'Desserts',
-};
+export default async function DessertDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const sb = await createServerClient();
 
-export default async function DessertsPage() {
-  const desserts = await getProducts('dessert');
+  const { data: product, error } = await sb
+    .from('products')
+    .select(`
+      id, slug, name, short_desc, long_desc, product_type,
+      allows_flavour, allows_cake_message, allows_size, base_price,
+      product_images(id, url, sort_order),
+      product_sizes(id, label, weight_lb, price, is_default, sort_order),
+      product_variants(id, name, price_delta, sort_order),
+      product_flavours(flavours(id, name, price_delta))
+    `)
+    .eq('slug', slug)
+    .eq('is_active', true)
+    .single();
+
+  if (error || !product) {
+    notFound();
+  }
+
+  // MAP IMAGES TO OBJECTS
+  const images = (product.product_images ?? [])
+    .sort((a: any, b: any) => a.sort_order - b.sort_order)
+    .map((i: any, index: number) => ({
+      id: i.id,
+      url: i.url,
+      label: `Design ${index + 1}`
+    }));
+
+  const sizes = (product.product_sizes ?? []).sort((a: any, b: any) => a.sort_order - b.sort_order);
+  const variants = (product.product_variants ?? []).sort((a: any, b: any) => a.sort_order - b.sort_order);
+  const flavours = (product.product_flavours ?? [])
+    .map((pf: any) => pf.flavours)
+    .filter(Boolean);
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-12 md:py-16">
-      <h1 className="font-display text-4xl text-ink md:text-5xl mb-8">Desserts</h1>
-      <div className="grid grid-cols-2 gap-4 md:gap-6 lg:grid-cols-3 xl:grid-cols-4">
-        {desserts.map((p) => (
-          <ProductCard key={p.slug} product={p} />
-        ))}
-      </div>
-    </div>
+    <ProductDetailClient
+      product={{
+        id: product.id,
+        slug: product.slug,
+        name: product.name,
+        short_desc: product.short_desc,
+        long_desc: product.long_desc,
+        allows_flavour: product.allows_flavour,
+        allows_cake_message: product.allows_cake_message,
+        allows_size: product.allows_size,
+        base_price: Number(product.base_price),
+        images,
+        sizes,
+        variants,
+        flavours,
+      }}
+    />
   );
 }

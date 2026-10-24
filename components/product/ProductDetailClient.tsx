@@ -40,15 +40,14 @@ export function ProductDetailClient({ product }: { product: any }) {
     return price;
   }, [selectedSize, selectedVariant, selectedFlavour, product.base_price]);
 
-  function handleAdd() {
+   function handleAdd() {
     add({
       product_id: product.id,
       product_slug: product.slug,
       product_name: product.name,
       image: selectedImageObj?.url || '',
-      // Pass the design ID and Label to the cart so they are unique per design
-      design_id: selectedImageObj?.id || null,
-      design_label: selectedImageObj?.label || null,
+      design_id: selectedImageObj?.id || null,       // <-- Saves the exact image UUID
+      design_label: selectedImageObj?.label || null, // <-- Saves "Design 2"
       
       variant: selectedVariant?.name ?? null,
       flavour: selectedFlavour?.name ?? null,
@@ -57,7 +56,7 @@ export function ProductDetailClient({ product }: { product: any }) {
       unit_price: unitPrice,
       qty,
     });
-
+    // ...
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
   }
