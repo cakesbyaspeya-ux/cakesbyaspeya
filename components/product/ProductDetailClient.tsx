@@ -19,6 +19,7 @@ export function ProductDetailClient({ product }: { product: any }) {
   const [flavourId, setFlavourId] = useState<string | null>(product.flavours[0]?.id ?? null);
   const [cakeMessage, setCakeMessage] = useState('');
   const [qty, setQty] = useState(1);
+  const [activeImageIndex, setActiveImageIndex] = useState(0); // <-- Add this
   const [added, setAdded] = useState(false);
 
   // Find the selected objects to calculate price
@@ -39,7 +40,7 @@ export function ProductDetailClient({ product }: { product: any }) {
       product_id: product.id,
       product_slug: product.slug,
       product_name: product.name,
-      image: product.images[0] || '',
+            image: product.images[activeImageIndex] || product.images[0] || '', // <-- Add activeImageIndex
       variant: selectedVariant?.name ?? null,
       flavour: selectedFlavour?.name ?? null,
       size_label: selectedSize?.label ?? null,
@@ -57,7 +58,11 @@ export function ProductDetailClient({ product }: { product: any }) {
       <div className="grid gap-10 md:grid-cols-2">
         {/* LEFT: Image Gallery */}
         <div className="space-y-4">
-          <ImageSlideshow images={product.images} alt={product.name} />
+          <ImageSlideshow 
+            images={product.images} 
+            alt={product.name} 
+            onIndexChange={setActiveImageIndex} // <-- Add this
+          />
           {/* Thumbnails */}
           {product.images.length > 1 && (
             <div className="grid grid-cols-4 gap-2">

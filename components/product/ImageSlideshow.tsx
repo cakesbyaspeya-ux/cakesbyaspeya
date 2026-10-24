@@ -6,13 +6,19 @@ import { useEffect, useState } from 'react';
 type Props = {
   images: string[];
   alt: string;
-  autoMs?: number;   // ms between slides — default 3500
+  autoMs?: number;
+  onIndexChange?: (index: number) => void; // <-- Added this
 };
 
-export function ImageSlideshow({ images, alt, autoMs = 3500 }: Props) {
+export function ImageSlideshow({ images, alt, autoMs = 3500, onIndexChange }: Props) {
   const [current, setCurrent] = useState(0);
   const [paused, setPaused] = useState(false);
   const multiple = images.length > 1;
+
+  // Notify parent when image changes
+  useEffect(() => {
+    if (onIndexChange) onIndexChange(current);
+  }, [current, onIndexChange]);
 
   // Auto-advance timer
   useEffect(() => {
@@ -23,12 +29,10 @@ export function ImageSlideshow({ images, alt, autoMs = 3500 }: Props) {
     return () => clearInterval(timer);
   }, [multiple, paused, images.length, autoMs]);
 
-  // Reset index if images prop changes (e.g. after admin edit)
   useEffect(() => {
     if (current >= images.length) setCurrent(0);
   }, [images.length, current]);
 
-  // ── Empty state: branded placeholder ──
   if (images.length === 0) {
     return (
       <div className="flex aspect-square w-full items-center justify-center overflow-hidden rounded-2xl bg-cream-dark">
@@ -37,7 +41,6 @@ export function ImageSlideshow({ images, alt, autoMs = 3500 }: Props) {
     );
   }
 
-  // ── Single image: static, no timer ──
   if (!multiple) {
     return (
       <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-cream-dark">
@@ -47,13 +50,11 @@ export function ImageSlideshow({ images, alt, autoMs = 3500 }: Props) {
           fill
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           className="object-cover"
-          priority={false}
         />
       </div>
     );
   }
 
-  // ── Multiple images: slideshow ──
   return (
     <div
       className="relative aspect-square w-full overflow-hidden rounded-2xl bg-cream-dark"
@@ -73,7 +74,6 @@ export function ImageSlideshow({ images, alt, autoMs = 3500 }: Props) {
         />
       ))}
 
-      {/* Dots */}
       <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5">
         {images.map((_, idx) => (
           <button
@@ -82,9 +82,7 @@ export function ImageSlideshow({ images, alt, autoMs = 3500 }: Props) {
             onClick={() => setCurrent(idx)}
             aria-label={`Show image ${idx + 1}`}
             className={`h-2 rounded-full transition-all ${
-              idx === current
-                ? 'w-5 bg-cream'
-                : 'w-2 bg-cream/60 hover:bg-cream/80'
+              idx === current ? 'w-5 bg-cream' : 'w-2 bg-cream/60 hover:bg-cream/80'
             }`}
           />
         ))}

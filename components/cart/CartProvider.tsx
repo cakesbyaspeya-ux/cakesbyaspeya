@@ -61,12 +61,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [items, mounted]);
 
   const add: CartContextValue['add'] = (item) => {
-    const key = [
+        const key = [
       item.product_id,
       item.variant ?? '',
       item.flavour ?? '',
       item.size_label ?? '',
       item.cake_message ?? '',
+      item.image ?? '', // <-- Added image so different designs are separate cart items
     ].join('|');
 
     setItems((prev) => {
