@@ -11,7 +11,6 @@ export function ProductDetailClient({ product }: { product: any }) {
   const router = useRouter();
   const { add } = useCart();
 
-  // State for selections
   const [sizeId, setSizeId] = useState<string | null>(
     product.sizes.find((s: any) => s.is_default)?.id ?? product.sizes[0]?.id ?? null
   );
@@ -20,16 +19,14 @@ export function ProductDetailClient({ product }: { product: any }) {
   const [cakeMessage, setCakeMessage] = useState('');
   const [qty, setQty] = useState(1);
   
-  // State for the selected design
+  // Tracks the currently selected design
   const [activeImageIndex, setActiveImageIndex] = useState(0); 
   const [added, setAdded] = useState(false);
 
-  // Find the selected objects to calculate price
   const selectedSize = product.sizes.find((s: any) => s.id === sizeId);
   const selectedVariant = product.variants.find((v: any) => v.id === variantId);
   const selectedFlavour = product.flavours.find((f: any) => f.id === flavourId);
 
-  // Live price calculation
   const unitPrice = useMemo(() => {
     let price = selectedSize?.price ?? product.base_price ?? 0;
     if (selectedVariant?.price_delta) price += selectedVariant.price_delta;
@@ -38,14 +35,14 @@ export function ProductDetailClient({ product }: { product: any }) {
   }, [selectedSize, selectedVariant, selectedFlavour, product.base_price]);
 
   function handleAdd() {
-    // Save the exact image the user selected to the cart
+    // Save the exact image the user clicked on
     const selectedImage = product.images[activeImageIndex] || product.images[0] || '';
 
     add({
       product_id: product.id,
       product_slug: product.slug,
       product_name: product.name,
-      image: selectedImage, // <-- This is the specific design
+      image: selectedImage,
       variant: selectedVariant?.name ?? null,
       flavour: selectedFlavour?.name ?? null,
       size_label: selectedSize?.label ?? null,
@@ -64,7 +61,6 @@ export function ProductDetailClient({ product }: { product: any }) {
         {/* LEFT: Image Gallery */}
         <div className="space-y-4">
           
-          {/* Main Slideshow */}
           <ImageSlideshow 
             images={product.images} 
             alt={product.name} 
@@ -82,7 +78,7 @@ export function ProductDetailClient({ product }: { product: any }) {
                   onClick={() => setActiveImageIndex(i)}
                   className={`aspect-square overflow-hidden rounded-xl transition-all ${
                     activeImageIndex === i 
-                      ? 'ring-4 ring-burgundy/40 opacity-100' 
+                      ? 'ring-4 ring-burgundy/50 opacity-100' 
                       : 'opacity-50 hover:opacity-100'
                   }`}
                 >
@@ -101,7 +97,6 @@ export function ProductDetailClient({ product }: { product: any }) {
 
           <div className="mt-6 text-3xl font-display text-burgundy">{PKR(unitPrice)}</div>
 
-          {/* Sizes */}
           {product.allows_size && product.sizes.length > 0 && (
             <div className="mt-6">
               <label className="block text-sm font-medium mb-2 text-ink">Size / weight</label>
@@ -123,7 +118,6 @@ export function ProductDetailClient({ product }: { product: any }) {
             </div>
           )}
 
-          {/* Variants (e.g., Black Forest) */}
           {product.variants.length > 0 && (
             <div className="mt-5">
               <label className="block text-sm font-medium mb-2 text-ink">Type</label>
@@ -145,7 +139,6 @@ export function ProductDetailClient({ product }: { product: any }) {
             </div>
           )}
 
-          {/* Flavours Dropdown */}
           {product.allows_flavour && product.flavours.length > 0 && (
             <div className="mt-5">
               <label className="block text-sm font-medium mb-2 text-ink">Flavour</label>
@@ -163,7 +156,6 @@ export function ProductDetailClient({ product }: { product: any }) {
             </div>
           )}
 
-          {/* Cake Message & Live Preview */}
           {product.allows_cake_message && (
             <div className="mt-5">
               <label className="block text-sm font-medium mb-2 text-ink">
@@ -178,7 +170,6 @@ export function ProductDetailClient({ product }: { product: any }) {
                 className="w-full rounded-lg border border-olive/30 bg-cream-card px-4 py-2.5 outline-none focus:border-burgundy"
               />
               
-              {/* The Live Preview */}
               {product.images[activeImageIndex] && (
                 <div className="mt-3 relative aspect-[3/1] overflow-hidden rounded-xl">
                   <img src={product.images[activeImageIndex]} alt="" className="h-full w-full object-cover opacity-60" />
@@ -192,7 +183,6 @@ export function ProductDetailClient({ product }: { product: any }) {
             </div>
           )}
 
-          {/* Quantity & Add to Cart */}
           <div className="mt-8 flex items-center gap-4">
             <div className="flex items-center rounded-full border border-olive/30 bg-cream-card">
               <button onClick={() => setQty(q => Math.max(1, q - 1))} className="px-4 py-2 text-olive-dark hover:text-burgundy">−</button>

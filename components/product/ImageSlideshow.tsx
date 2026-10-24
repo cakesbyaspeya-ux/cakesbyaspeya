@@ -7,8 +7,8 @@ type Props = {
   images: string[];
   alt: string;
   autoMs?: number;
-  currentIndex: number;                   // <-- Added: Parent controls index
-  onIndexChange: (index: number) => void; // <-- Added: Parent updates index
+  currentIndex: number;
+  onIndexChange: (index: number) => void;
 };
 
 export function ImageSlideshow({ images, alt, autoMs = 3500, currentIndex, onIndexChange }: Props) {
@@ -60,7 +60,6 @@ export function ImageSlideshow({ images, alt, autoMs = 3500, currentIndex, onInd
         />
       ))}
 
-      {/* Dots */}
       <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5">
         {images.map((_, idx) => (
           <button
