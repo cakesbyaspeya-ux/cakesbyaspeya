@@ -1,5 +1,6 @@
 export type OrderItemPayload = {
   product_name: string;
+  design_label?: string | null; // <-- Added
   flavour?: string | null;
   size_label?: string | null;
   cake_message?: string | null;
@@ -27,6 +28,10 @@ const PKR = (n: number) => '৳' + n.toLocaleString('en-BD');
 export function buildOrderMessage(o: OrderPayload, pickupAddress: string): string {
   const itemBlocks = o.items.map((it, i) => {
     const lines = [`${i + 1}. ${it.product_name} x${it.qty}`];
+    
+    // Add Design Label if selected
+    if (it.design_label) lines.push(`   Design: ${it.design_label}`);
+    
     if (it.flavour) lines.push(`   Flavour: ${it.flavour}`);
     if (it.size_label) lines.push(`   Size/weight: ${it.size_label}`);
     if (it.cake_message?.trim()) lines.push(`   Cake message: ${it.cake_message.trim()}`);
@@ -70,7 +75,6 @@ export function buildOrderMessage(o: OrderPayload, pickupAddress: string): strin
 }
 
 export function generateReference() {
-  // Generates a unique ID like CBA-9380323
   return 'CBA-' + Math.floor(1000000 + Math.random() * 9000000);
 }
 

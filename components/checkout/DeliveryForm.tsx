@@ -41,6 +41,9 @@ export function DeliveryForm({ onBack }: { onBack: () => void }) {
       items: items.map(it => ({
         product_id: it.product_id,
         product_name: it.product_name,
+        design_id: it.design_id,       // <-- Added
+        design_label: it.design_label, // <-- Added
+        image: it.image,               // <-- Added (used as design_url)
         flavour: it.flavour,
         size_label: it.size_label,
         cake_message: it.cake_message,
@@ -59,16 +62,9 @@ export function DeliveryForm({ onBack }: { onBack: () => void }) {
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || 'Failed to place order');
 
-      // Save message to session storage so the thank-you page can use it if needed
       sessionStorage.setItem('cba_last_order', JSON.stringify({ ref: json.reference, waUrl: json.waUrl }));
-      
-      // Clear the cart
       clear();
-
-      // Open WhatsApp in a new tab
       window.open(json.waUrl, '_blank');
-
-      // Redirect current tab to the thank you page
       router.push(`/order-confirmed/${json.reference}`);
       
     } catch (err: any) {

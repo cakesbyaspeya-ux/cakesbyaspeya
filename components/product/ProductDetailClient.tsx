@@ -11,6 +11,7 @@ export function ProductDetailClient({ product }: { product: any }) {
   const router = useRouter();
   const { add } = useCart();
 
+  // --- State ---
   const [sizeId, setSizeId] = useState<string | null>(
     product.sizes.find((s: any) => s.is_default)?.id ?? product.sizes[0]?.id ?? null
   );
@@ -19,14 +20,19 @@ export function ProductDetailClient({ product }: { product: any }) {
   const [cakeMessage, setCakeMessage] = useState('');
   const [qty, setQty] = useState(1);
   
-  // Tracks the currently selected design
+  // NEW: Track exactly which image design is selected
   const [activeImageIndex, setActiveImageIndex] = useState(0); 
   const [added, setAdded] = useState(false);
 
+  // --- Derived Data ---
   const selectedSize = product.sizes.find((s: any) => s.id === sizeId);
   const selectedVariant = product.variants.find((v: any) => v.id === variantId);
   const selectedFlavour = product.flavours.find((f: any) => f.id === flavourId);
+  
+  // Get the exact image object the user is looking at
+  const selectedImageObj = product.images[activeImageIndex] || product.images[0];
 
+  // Live price calculation
   const unitPrice = useMemo(() => {
     let price = selectedSize?.price ?? product.base_price ?? 0;
     if (selectedVariant?.price_delta) price += selectedVariant.price_delta;
@@ -35,14 +41,15 @@ export function ProductDetailClient({ product }: { product: any }) {
   }, [selectedSize, selectedVariant, selectedFlavour, product.base_price]);
 
   function handleAdd() {
-    // Save the exact image the user clicked on
-    const selectedImage = product.images[activeImageIndex] || product.images[0] || '';
-
     add({
       product_id: product.id,
       product_slug: product.slug,
       product_name: product.name,
-      image: selectedImage,
+      image: selectedImageObj?.url || '',
+      // Pass the design ID and Label to the cart so they are unique per design
+      design_id: selectedImageObj?.id || null,
+      design_label: selectedImageObj?.label || null,
+      
       variant: selectedVariant?.name ?? null,
       flavour: selectedFlavour?.name ?? null,
       size_label: selectedSize?.label ?? null,
@@ -58,45 +65,54 @@ export function ProductDetailClient({ product }: { product: any }) {
   return (
     <main className="mx-auto max-w-6xl px-4 py-10 md:py-16">
       <div className="grid gap-10 md:grid-cols-2">
-        {/* LEFT: Image Gallery */}
+        
+        {/* LEFT: Image Gallery & Thumbnails */}
         <div className="space-y-4">
-          
+          {/* Main Slideshow (Synced with activeImageIndex) */}
           <ImageSlideshow 
-            images={product.images} 
+            images={product.images.map((img: any) => img.url)} 
             alt={product.name} 
-            currentIndex={activeImageIndex}
+            activeIndex={activeImageIndex}
             onIndexChange={setActiveImageIndex}
           />
           
           {/* Clickable Thumbnails */}
           {product.images.length > 1 && (
-            <div className="grid grid-cols-4 gap-3">
-              {product.images.map((img: string, i: number) => (
+            <div className="grid grid-cols-4 gap-2">
+              {product.images.map((img: any, i: number) => (
                 <button
-                  key={i}
-                  type="button"
+                  key={img.id}
                   onClick={() => setActiveImageIndex(i)}
-                  className={`aspect-square overflow-hidden rounded-xl transition-all ${
+                  className={`aspect-square overflow-hidden rounded-lg bg-cream-dark ring-2 transition-all ${
                     activeImageIndex === i 
-                      ? 'ring-4 ring-burgundy/50 opacity-100' 
-                      : 'opacity-50 hover:opacity-100'
+                      ? 'ring-burgundy scale-95 shadow-sm' 
+                      : 'ring-transparent hover:ring-olive/50'
                   }`}
+                  title={img.label}
                 >
-                  <img src={img} alt={`Design ${i + 1}`} className="h-full w-full object-cover" />
+                  <img src={img.url} alt={img.label} className="h-full w-full object-cover" />
                 </button>
               ))}
             </div>
           )}
-
         </div>
 
         {/* RIGHT: Product Details */}
         <div>
           <h1 className="font-display text-3xl md:text-4xl text-ink">{product.name}</h1>
+          
+          {/* Display the active design label if there are multiple images */}
+          {product.images.length > 1 && selectedImageObj?.label && (
+            <p className="mt-1 text-sm font-medium text-burgundy">
+              Selected: {selectedImageObj.label}
+            </p>
+          )}
+
           {product.short_desc && <p className="mt-2 text-olive-dark">{product.short_desc}</p>}
 
           <div className="mt-6 text-3xl font-display text-burgundy">{PKR(unitPrice)}</div>
 
+          {/* Sizes */}
           {product.allows_size && product.sizes.length > 0 && (
             <div className="mt-6">
               <label className="block text-sm font-medium mb-2 text-ink">Size / weight</label>
@@ -118,6 +134,7 @@ export function ProductDetailClient({ product }: { product: any }) {
             </div>
           )}
 
+          {/* Variants */}
           {product.variants.length > 0 && (
             <div className="mt-5">
               <label className="block text-sm font-medium mb-2 text-ink">Type</label>
@@ -139,6 +156,7 @@ export function ProductDetailClient({ product }: { product: any }) {
             </div>
           )}
 
+          {/* Flavours */}
           {product.allows_flavour && product.flavours.length > 0 && (
             <div className="mt-5">
               <label className="block text-sm font-medium mb-2 text-ink">Flavour</label>
@@ -156,6 +174,7 @@ export function ProductDetailClient({ product }: { product: any }) {
             </div>
           )}
 
+          {/* Cake Message & Live Preview */}
           {product.allows_cake_message && (
             <div className="mt-5">
               <label className="block text-sm font-medium mb-2 text-ink">
@@ -170,9 +189,9 @@ export function ProductDetailClient({ product }: { product: any }) {
                 className="w-full rounded-lg border border-olive/30 bg-cream-card px-4 py-2.5 outline-none focus:border-burgundy"
               />
               
-              {product.images[activeImageIndex] && (
+              {selectedImageObj && (
                 <div className="mt-3 relative aspect-[3/1] overflow-hidden rounded-xl">
-                  <img src={product.images[activeImageIndex]} alt="" className="h-full w-full object-cover opacity-60" />
+                  <img src={selectedImageObj.url} alt="" className="h-full w-full object-cover opacity-60" />
                   <div className="absolute inset-0 flex items-center justify-center">
                     <span className="font-display text-2xl text-cream drop-shadow-lg text-center px-4 italic">
                       {cakeMessage || 'Your message appears here'}
@@ -183,6 +202,7 @@ export function ProductDetailClient({ product }: { product: any }) {
             </div>
           )}
 
+          {/* Quantity & Add to Cart */}
           <div className="mt-8 flex items-center gap-4">
             <div className="flex items-center rounded-full border border-olive/30 bg-cream-card">
               <button onClick={() => setQty(q => Math.max(1, q - 1))} className="px-4 py-2 text-olive-dark hover:text-burgundy">−</button>

@@ -25,9 +25,13 @@ export default async function CakeDetailPage({ params }: { params: Promise<{ slu
     notFound();
   }
 
-  const images = (product.product_images ?? [])
+   const images = (product.product_images ?? [])
     .sort((a: any, b: any) => a.sort_order - b.sort_order)
-    .map((i: any) => i.url);
+    .map((i: any, index: number) => ({
+      id: i.id,
+      url: i.url,
+      label: `Design ${index + 1}` // Automatically names them Design 1, Design 2, etc.
+    }));
 
   const sizes = (product.product_sizes ?? []).sort((a: any, b: any) => a.sort_order - b.sort_order);
   const variants = (product.product_variants ?? []).sort((a: any, b: any) => a.sort_order - b.sort_order);

@@ -27,22 +27,30 @@ export default function OrderConfirmedPage() {
           Your reference number is <strong className="text-burgundy">{ref}</strong>.
         </p>
         
-        <div className="bg-cream-dark/50 p-6 rounded-2xl mb-8">
-          <p className="text-sm text-ink font-medium mb-4">
-            If WhatsApp didn't open automatically, please tap the button below to send us your order details.
-          </p>
-          {waUrl ? (
-            <a 
-              href={waUrl} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="inline-block rounded-full bg-whatsapp px-8 py-3 font-medium text-white shadow hover:brightness-95 transition"
-            >
-              Open WhatsApp
-            </a>
-          ) : (
-            <p className="text-sm text-burgundy">Error: WhatsApp link not found. Please message us with your reference number.</p>
+        <div className="bg-cream-dark/50 p-6 rounded-2xl mb-8 space-y-4">
+          {waUrl && (
+            <div>
+              <p className="text-sm text-ink font-medium mb-3">If WhatsApp didn't open automatically, click below:</p>
+              <a 
+                href={waUrl} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-block rounded-full bg-whatsapp px-8 py-3 font-medium text-white shadow hover:brightness-95 transition"
+              >
+                Open WhatsApp
+              </a>
+            </div>
           )}
+          
+          <div className="pt-4 border-t border-olive/10">
+            <p className="text-sm text-olive-dark mb-3">Want to see when your cake is ready?</p>
+            <Link 
+              href={`/track/${ref}`}
+              className="inline-block rounded-full border border-olive px-8 py-3 font-medium text-olive-dark hover:bg-olive hover:text-cream transition"
+            >
+              Track Your Order
+            </Link>
+          </div>
         </div>
 
         <Link href="/" className="text-sm text-olive-dark hover:text-burgundy hover:underline">

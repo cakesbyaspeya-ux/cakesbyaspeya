@@ -2,12 +2,15 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 
+// ── Types ────────────────────────────────────────────────
 export type CartItem = {
-  key: string;
+  key: string;                  
   product_id: string;
   product_slug: string;
   product_name: string;
-  image: string; // <-- Crucial for different designs
+  image: string;
+  design_id?: string | null;    // <-- Added
+  design_label?: string | null; // <-- Added
   variant?: string | null;
   flavour?: string | null;
   size_label?: string | null;
@@ -24,11 +27,13 @@ type CartContextValue = {
   clear: () => void;
   subtotal: number;
   count: number;
-  mounted: boolean;
+  mounted: boolean;            
 };
 
+// ── Context ──────────────────────────────────────────────
 const CartContext = createContext<CartContextValue | null>(null);
 
+// ── Provider ─────────────────────────────────────────────
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [mounted, setMounted] = useState(false);
@@ -52,38 +57,45 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [items, mounted]);
 
   const add: CartContextValue['add'] = (item) => {
-    // We include the image in the key so different designs are separate items
     const key = [
       item.product_id,
       item.variant ?? '',
       item.flavour ?? '',
       item.size_label ?? '',
       item.cake_message ?? '',
-      item.image ?? '', // <-- Here is the fix
+      item.design_id ?? '', // <-- Added so different designs are separate cart items
     ].join('|');
 
     setItems((prev) => {
       const existing = prev.find((i) => i.key === key);
       if (existing) {
-        return prev.map((i) => i.key === key ? { ...i, qty: i.qty + item.qty } : i);
+        return prev.map((i) =>
+          i.key === key ? { ...i, qty: i.qty + item.qty } : i
+        );
       }
       return [...prev, { ...item, key }];
     });
   };
 
-  const remove = (key: string) => setItems((prev) => prev.filter((i) => i.key !== key));
+  const remove = (key: string) =>
+    setItems((prev) => prev.filter((i) => i.key !== key));
 
   const setQty = (key: string, qty: number) =>
     setItems((prev) =>
-      qty <= 0 ? prev.filter((i) => i.key !== key) : prev.map((i) => (i.key === key ? { ...i, qty } : i))
+      qty <= 0
+        ? prev.filter((i) => i.key !== key)
+        : prev.map((i) => (i.key === key ? { ...i, qty } : i))
     );
 
   const clear = () => setItems([]);
+
   const subtotal = items.reduce((s, i) => s + i.unit_price * i.qty, 0);
   const count = items.reduce((s, i) => s + i.qty, 0);
 
   return (
-    <CartContext.Provider value={{ items, add, remove, setQty, clear, subtotal, count, mounted }}>
+    <CartContext.Provider
+      value={{ items, add, remove, setQty, clear, subtotal, count, mounted }}
+    >
       {children}
     </CartContext.Provider>
   );

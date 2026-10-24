@@ -8,13 +8,10 @@ export async function POST(req: Request) {
     const body = await req.json();
     const sb = createAdminClient();
     
-    // 1. Generate reference
     const reference = generateReference();
-    
-    // 2. Calculate subtotal
     const subtotal = body.items.reduce((sum: number, item: any) => sum + (item.unit_price * item.qty), 0);
 
-    // 3. Save order to database
+    // 1. Save order
     const { data: order, error: orderError } = await sb
       .from('orders')
       .insert({
@@ -36,11 +33,13 @@ export async function POST(req: Request) {
 
     if (orderError) throw new Error(orderError.message);
 
-    // 4. Save order items
+    // 2. Save order items
     const orderItems = body.items.map((item: any) => ({
       order_id: order.id,
       product_id: item.product_id || null,
       product_name: item.product_name,
+      design_id: item.design_id || null,    // <-- Saved to DB
+      design_url: item.image || null,       // <-- Saved to DB
       flavour: item.flavour,
       size_label: item.size_label,
       cake_message: item.cake_message,
@@ -52,9 +51,7 @@ export async function POST(req: Request) {
     const { error: itemsError } = await sb.from('order_items').insert(orderItems);
     if (itemsError) throw new Error(itemsError.message);
 
-
-
-        // 🔔 Send Telegram Alert
+    // 🔔 Telegram Alert
     const telegramText = `
 🎂 *New Order: ${reference}*
 
@@ -64,14 +61,13 @@ export async function POST(req: Request) {
 ${body.delivery_method === 'delivery' ? `📍 *Area:* ${body.area}` : '🏪 *Pickup*'}
 
 📦 *Items:*
-${orderItems.map((item: any) => `- ${item.qty}x ${item.product_name}`).join('\n')}
+${orderItems.map((item: any) => `- ${item.qty}x ${item.product_name} ${item.design_label ? `(${item.design_label})` : ''}`).join('\n')}
 
 💰 *Subtotal:* ৳${subtotal.toLocaleString('en-BD')}
     `;
     await sendTelegramMessage(telegramText);
 
-    
-    // 5. Build WhatsApp Message
+    // 3. Build WhatsApp Message
     const message = buildOrderMessage(
       {
         reference,
