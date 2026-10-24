@@ -1,6 +1,6 @@
 export type OrderItemPayload = {
   product_name: string;
-  design_label?: string | null; // <-- Added
+  design_label?: string | null; 
   flavour?: string | null;
   size_label?: string | null;
   cake_message?: string | null;
@@ -28,10 +28,7 @@ const PKR = (n: number) => '৳' + n.toLocaleString('en-BD');
 export function buildOrderMessage(o: OrderPayload, pickupAddress: string): string {
   const itemBlocks = o.items.map((it, i) => {
     const lines = [`${i + 1}. ${it.product_name} x${it.qty}`];
-    
-    // Add Design Label if selected
     if (it.design_label) lines.push(`   Design: ${it.design_label}`);
-    
     if (it.flavour) lines.push(`   Flavour: ${it.flavour}`);
     if (it.size_label) lines.push(`   Size/weight: ${it.size_label}`);
     if (it.cake_message?.trim()) lines.push(`   Cake message: ${it.cake_message.trim()}`);
@@ -55,6 +52,10 @@ export function buildOrderMessage(o: OrderPayload, pickupAddress: string): strin
         `Address: ${o.address || 'Not specified'}`,
       ];
 
+  // Generate the live tracking link
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cakesbyaspeya.com';
+  const trackingLink = `${siteUrl}/track/${o.reference}`;
+
   return [
     `Order Reference: ${o.reference}`,
     ``,
@@ -71,6 +72,9 @@ export function buildOrderMessage(o: OrderPayload, pickupAddress: string): strin
     `Subtotal: ${PKR(o.subtotal)}`,
     `Delivery fee: To be confirmed on WhatsApp`,
     `Total (excl. delivery): ${PKR(o.subtotal)}`,
+    ``,
+    `🔗 Track your order status here:`,
+    trackingLink,
   ].join('\n');
 }
 
