@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createServerClient } from '@/lib/supabase/server';
 import { StatusButtons } from './StatusButtons';
+import { CopyLinkButton } from './CopyLinkButton';
 
 export default async function OrderDetailPage({ params }: { params: Promise<{ ref: string }> }) {
   const { ref } = await params;
@@ -48,14 +49,19 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ re
           </p>
         </div>
         
-        <a 
-          href={waLink} 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="rounded-full bg-whatsapp px-6 py-2.5 text-sm font-medium text-white hover:brightness-95 transition text-center"
-        >
-          Message Customer
-        </a>
+        {/* Action Buttons */}
+        <div className="flex flex-wrap gap-2">
+          <CopyLinkButton reference={order.reference} />
+          
+          <a 
+            href={waLink} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="rounded-full bg-whatsapp px-6 py-2.5 text-sm font-medium text-white hover:brightness-95 transition text-center"
+          >
+            Message Customer
+          </a>
+        </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 mb-6">
@@ -107,6 +113,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ re
               <div>
                 <p className="font-medium text-ink">{item.qty}× {item.product_name}</p>
                 <div className="text-sm text-olive-dark mt-1 space-y-0.5">
+                  {item.design_label && <p className="text-burgundy font-medium">{item.design_label}</p>}
                   {item.variant && <p>Type: {item.variant}</p>}
                   {item.flavour && <p>Flavour: {item.flavour}</p>}
                   {item.size_label && <p>Size: {item.size_label}</p>}

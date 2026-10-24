@@ -38,8 +38,8 @@ export async function POST(req: Request) {
       order_id: order.id,
       product_id: item.product_id || null,
       product_name: item.product_name,
-      design_id: item.design_id || null,    // <-- Saved to DB
-      design_url: item.image || null,       // <-- Saved to DB
+      design_id: item.design_id || null,    
+      design_url: item.image || null,       
       flavour: item.flavour,
       size_label: item.size_label,
       cake_message: item.cake_message,
@@ -51,7 +51,10 @@ export async function POST(req: Request) {
     const { error: itemsError } = await sb.from('order_items').insert(orderItems);
     if (itemsError) throw new Error(itemsError.message);
 
-    // 🔔 Telegram Alert
+    // 🔔 Telegram Alert with Tracking Link
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cakesbyaspeya.vercel.app';
+    const trackingLink = `${siteUrl}/track/${reference}`;
+
     const telegramText = `
 🎂 *New Order: ${reference}*
 
@@ -64,6 +67,8 @@ ${body.delivery_method === 'delivery' ? `📍 *Area:* ${body.area}` : '🏪 *Pic
 ${orderItems.map((item: any) => `- ${item.qty}x ${item.product_name} ${item.design_label ? `(${item.design_label})` : ''}`).join('\n')}
 
 💰 *Subtotal:* ৳${subtotal.toLocaleString('en-BD')}
+
+🔗 [Click to view order](${trackingLink})
     `;
     await sendTelegramMessage(telegramText);
 
