@@ -1,79 +1,84 @@
-import Link from 'next/link';
-import { createServerClient } from '@/lib/supabase/server';
 import { notFound } from 'next/navigation';
+import Link from 'next/link';
+import { createAdminClient } from '@/lib/supabase/admin'; // 👈 Use Admin client to bypass RLS
 
-const STEPS = ['Confirmed', 'Baking', 'Out for Delivery', 'Delivered'];
+const STEPS = ['New', 'Confirmed', 'Baking', 'Out for delivery', 'Delivered'] as const;
 const MAP: Record<string, number> = {
-  new: 0, confirmed: 0, baking: 1, out_for_delivery: 2, delivered: 3, cancelled: -1,
+  new: 0, confirmed: 1, baking: 2, out_for_delivery: 3, delivered: 4, cancelled: -1,
 };
 
 export default async function TrackPage({ params }: { params: Promise<{ ref: string }> }) {
   const { ref } = await params;
-  const sb = await createServerClient();
+  
+  // Use Admin client so customers can see their order without logging in
+  const sb = createAdminClient(); 
   
   const { data: order } = await sb
     .from('orders')
     .select('*, order_items(*)')
     .eq('reference', ref)
     .single();
-
+    
   if (!order) notFound();
-
+  
   if (order.status === 'cancelled') {
     return (
-      <div className="mx-auto max-w-lg px-4 py-24 text-center">
-        <h1 className="font-display text-3xl text-burgundy mb-2">Order Cancelled</h1>
-        <p className="text-olive-dark">This order ({ref}) was cancelled. Please contact us on WhatsApp.</p>
-        <Link href="/" className="mt-6 inline-block text-burgundy hover:underline">Back to home</Link>
-      </div>
+      <main className="mx-auto max-w-xl px-4 py-16 text-center">
+        <h1 className="font-display text-3xl text-ink">Order {ref}</h1>
+        <p className="mt-3 text-burgundy">This order was cancelled. Please contact us on WhatsApp.</p>
+      </main>
     );
   }
-
-  const currentStep = MAP[order.status] ?? 0;
+  
+  const idx = MAP[order.status] ?? 0;
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-16">
-      <div className="text-center mb-10">
-        <h1 className="font-display text-3xl text-ink">Order Status</h1>
-        <p className="text-olive-dark mt-2 font-mono text-sm">{order.reference}</p>
+    <main className="mx-auto max-w-2xl px-4 py-12 md:py-16">
+      <div className="text-center mb-8">
+        <p className="text-sm font-medium text-olive-dark uppercase tracking-wider mb-1">Order Status</p>
+        <h1 className="font-display text-3xl text-ink">{order.reference}</h1>
+        <p className="mt-1 text-sm text-olive-dark">For {order.delivery_date} · {order.preferred_time}</p>
       </div>
 
-      {/* Timeline */}
-      <div className="relative border-l-2 border-olive/20 ml-4 md:ml-0 md:border-l-0 space-y-8">
-        {STEPS.map((step, i) => {
-          const active = i <= currentStep;
-          return (
-            <div key={step} className="relative pl-8 md:pl-0 md:text-center md:flex-1">
-              <div className={`absolute left-[-9px] top-1 h-4 w-4 rounded-full md:static md:mx-auto md:mb-3 ${
-                active ? 'bg-burgundy' : 'bg-cream-dark border-2 border-olive/30'
-              }`} />
-              <p className={`font-medium ${active ? 'text-ink' : 'text-olive-dark/50'}`}>{step}</p>
-            </div>
-          );
-        })}
+      <div className="rounded-3xl bg-cream-card p-6 md:p-8 ring-1 ring-black/5 shadow-soft mb-8">
+        <ol className="space-y-6">
+          {STEPS.map((s, i) => (
+            <li key={s} className="flex items-center gap-4">
+              <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-medium ${
+                i <= idx ? 'bg-olive text-cream' : 'bg-cream-dark text-olive-dark'
+              }`}>
+                {i < idx ? '✓' : i + 1}
+              </span>
+              <div>
+                <span className={`text-lg font-medium ${i <= idx ? 'text-ink' : 'text-olive-dark'}`}>{s}</span>
+                {i === idx && <p className="text-xs text-burgundy font-medium mt-0.5 animate-pulse">Current Status</p>}
+              </div>
+            </li>
+          ))}
+        </ol>
       </div>
 
-      <div className="mt-12 rounded-2xl bg-cream-card p-6 ring-1 ring-black/5">
-        <h2 className="font-display text-xl border-b border-olive/20 pb-3 mb-4">Order Details</h2>
-        <p className="text-sm text-olive-dark mb-4">
-          {order.delivery_method === 'delivery' ? 'Delivering to:' : 'Pickup on:'} <strong className="text-ink">{order.delivery_date}</strong> at {order.preferred_time}
-        </p>
+      <div className="rounded-2xl bg-cream-card p-6 ring-1 ring-black/5">
+        <h2 className="font-display text-lg border-b border-olive/20 pb-2 mb-3">Your Items</h2>
         <ul className="space-y-3">
-          {order.order_items.map((item: any) => (
-            <li key={item.id} className="flex justify-between text-sm">
-              <span>{item.qty}x {item.product_name} {item.size_label && `(${item.size_label})`}</span>
-              <span className="text-olive-dark">৳{Number(item.line_total).toLocaleString()}</span>
+          {order.order_items.map((it: any) => (
+            <li key={it.id} className="flex gap-3 text-sm">
+              <span className="font-medium text-ink">{it.qty}×</span>
+              <div>
+                <p className="font-medium text-ink">{it.product_name}</p>
+                {it.design_label && <p className="text-xs text-burgundy">{it.design_label}</p>}
+                <p className="text-xs text-olive-dark">{[it.size_label, it.flavour].filter(Boolean).join(' · ')}</p>
+              </div>
             </li>
           ))}
         </ul>
       </div>
 
       <div className="mt-8 text-center">
-         <p className="text-sm text-olive-dark">Need to ask a question?</p>
-         <a href={`https://wa.me/8801519409555?text=Hi, I have a question about order ${order.reference}`} className="mt-2 inline-block rounded-full bg-whatsapp px-6 py-2 text-sm text-white font-medium hover:brightness-95">
-            Message us on WhatsApp
-         </a>
+        <Link href="/" className="text-sm text-olive-dark hover:text-burgundy hover:underline">
+          ← Back to home
+        </Link>
       </div>
-    </div>
+    </main>
   );
 }
