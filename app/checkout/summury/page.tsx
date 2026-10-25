@@ -10,16 +10,29 @@ import { OrderSummary } from '@/components/checkout/OrderSummary';
 export default function CheckoutSummaryPage() {
   const router = useRouter();
   const { items, upsells, promoCode, discountAmount, total, clear } = useCart();
+  
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<any>(null);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    if (items.length === 0) router.push('/cart');
+    setIsMounted(true);
+    
+    // Safety check: if cart is empty, go back to cart
+    if (items.length === 0) {
+      router.replace('/cart');
+      return;
+    }
+
     const saved = sessionStorage.getItem('cba_checkout_info');
-    if (!saved) router.push('/checkout/info');
-    else setInfo(JSON.parse(saved));
-  }, [items, router]);
+    if (!saved) {
+      // If they skipped the info page, send them there
+      router.replace('/checkout/info');
+    } else {
+      setInfo(JSON.parse(saved));
+    }
+  }, [items.length, router]);
 
   async function handlePlaceOrder() {
     setLoading(true);
@@ -57,7 +70,18 @@ export default function CheckoutSummaryPage() {
     }
   }
 
-  if (!info || items.length === 0) return null;
+  // 👇 1. Show a loading state instead of a blank screen while checking data
+  if (!isMounted || (!info && items.length > 0)) {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-olive border-t-transparent"></div>
+        <p className="mt-4 text-sm text-olive-dark">Loading your order...</p>
+      </div>
+    );
+  }
+
+  // If cart is empty, the useEffect will redirect, but we return null for a split second
+  if (items.length === 0) return null;
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 md:py-16">
