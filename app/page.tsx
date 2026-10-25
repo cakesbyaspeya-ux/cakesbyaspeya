@@ -12,6 +12,15 @@ export default async function HomePage() {
 
   const heroImage = cakes.find((cake) => cake.images.length > 0)?.images[0];
 
+  const instagramImages = [
+    'https://images.unsplash.com/photo-1578985545062-69928b1d9587?q=80&w=400&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?q=80&w=400&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1488477181946-6428a0291777?q=80&w=400&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1550617931-e17a7b70dce2?q=80&w=400&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1571115177098-24ec42ed204d?q=80&w=400&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1586985289688-ca3cf47d3e6e?q=80&w=400&auto=format&fit=crop',
+  ];
+
   return (
     <div>
       {/* HERO SECTION */}
@@ -60,12 +69,6 @@ export default async function HomePage() {
           <div className="relative aspect-square w-full overflow-hidden rounded-3xl bg-cream-dark shadow-soft">
             {heroImage ? (
               // eslint-disable-next-line @next/next/no-img-element
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img 
-                src={`https://images.unsplash.com/photo-1578985545062-69928b1d9587?q=80&w=400&auto=format&fit=crop&sig=${i}`} 
-                alt="Instagram post" 
-                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" 
-              />
               <img
                 src={heroImage}
                 alt="Featured cake by Cakes by Aspeya"
@@ -290,8 +293,7 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
-    
-    
+
       {/* INSTAGRAM GRID */}
       <section className="mx-auto max-w-6xl px-4 py-12 md:py-16">
         <div className="mb-8 text-center">
@@ -310,26 +312,19 @@ export default async function HomePage() {
         </div>
 
         <div className="grid grid-cols-2 gap-2 md:grid-cols-3 md:gap-4 lg:grid-cols-6">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
+          {instagramImages.map((image, index) => (
             <a
-              key={i}
+              key={image}
               href="https://www.instagram.com/_cakesbyaspeya_/?hl=en"
               target="_blank"
               rel="noopener noreferrer"
-              aria-label={`Visit Cakes by Aspeya on Instagram — post ${i}`}
+              aria-label={`Visit Cakes by Aspeya on Instagram — image ${index + 1}`}
               className="group relative aspect-square overflow-hidden rounded-xl bg-cream-dark"
             >
-              {/* Replace with your actual Instagram image URLs */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img 
-                src={`https://images.unsplash.com/photo-1578985545062-69928b1d9587?q=80&w=400&auto=format&fit=crop&sig=${i}`} 
-                alt="Instagram post" 
-                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" 
-              />
               <img
-                src={`https://images.unsplash.com/photo-1578985545062-69928b1d9587?q=80&w=400&auto=format&fit=crop&sig=${i}`}
-                alt={`Cake inspiration ${i}`}
+                src={image}
+                alt={`Cake inspiration ${index + 1}`}
                 loading="lazy"
                 className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
               />
@@ -341,8 +336,6 @@ export default async function HomePage() {
           ))}
         </div>
       </section>
-
-    
     </div>
   );
 }
