@@ -56,6 +56,12 @@ export function ProductDetailClient({ product, relatedProducts = [] }: { product
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Check file size (Supabase default limit is 5MB for free tier)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('File is too large. Please upload an image under 5MB.');
+      return;
+    }
+
     setUploading(true);
     const ext = file.name.split('.').pop();
     const fileName = `design-${Date.now()}.${ext}`;
@@ -63,15 +69,15 @@ export function ProductDetailClient({ product, relatedProducts = [] }: { product
     const { error } = await sb.storage.from('customer-designs').upload(fileName, file);
     
     if (error) {
-      alert('Failed to upload image. Please try again.');
-      console.error(error);
+      // 👇 This will now show the EXACT Supabase error
+      alert(`Upload failed: ${error.message}`);
+      console.error("Storage Error:", error);
     } else {
       const { data: { publicUrl } } = sb.storage.from('customer-designs').getPublicUrl(fileName);
       setCustomDesignUrl(publicUrl);
     }
     setUploading(false);
   }
-
   function handleAdd() {
     add({
       product_id: product.id,
