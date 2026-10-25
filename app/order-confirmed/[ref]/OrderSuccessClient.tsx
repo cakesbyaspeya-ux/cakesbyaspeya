@@ -23,7 +23,7 @@ export function OrderSuccessClient({ order }: { order: any }) {
 
   // 2. Custom WhatsApp Message (Telling you they are sending the PDF)
   const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '8801519409555';
-  const waMessage = `Hi Cakes by Aspeya! I would like to confirm my order *${order.reference}*. I have downloaded my PDF receipt and will send it here.`;
+  const waMessage = `Hi Cakes by Aspeya! I would like to confirm my order *${order.reference}*.
   const waUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(waMessage)}`;
 
   return (
