@@ -1,29 +1,50 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { generateReceiptPdf } from '@/lib/generateReceiptPdf';
 
 export function OrderSuccessClient({ order }: { order: any }) {
   const [downloading, setDownloading] = useState(false);
+  const [autoDownloaded, setAutoDownloaded] = useState(false);
+  
+  // Use a ref to ensure we only attempt the auto-download once
+  const hasAttemptedAutoDownload = useRef(false);
 
-  // 1. Generate and Download PDF
-  function handleDownload() {
+  // 1. Function to generate and download PDF
+  function downloadPdf() {
     setDownloading(true);
     try {
       const doc = generateReceiptPdf(order);
       doc.save(`Receipt-${order.reference}.pdf`);
     } catch (err) {
       console.error("PDF Error:", err);
-      alert('Failed to download PDF. Please check the console.');
     } finally {
       setDownloading(false);
     }
   }
 
-  // 2. Custom WhatsApp Message (Telling you they are sending the PDF)
+  // 2. Auto-download when the page loads
+  useEffect(() => {
+    if (!hasAttemptedAutoDownload.current) {
+      hasAttemptedAutoDownload.current = true;
+      
+      // Small delay to ensure the page has rendered before triggering the download
+      const timer = setTimeout(() => {
+        downloadPdf();
+        setAutoDownloaded(true);
+      }, 800);
+
+      return () => clearTimeout(timer);
+    }
+  }, [order]); // Dependency array
+
+  // 3. Build the WhatsApp Message
   const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '8801519409555';
-  const waMessage = `Hi Cakes by Aspeya! I would like to confirm my order *${order.reference}*.`;
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cakesbyaspeya.vercel.app';
+  const trackingUrl = `${siteUrl}/track/${order.reference}`;
+  
+  const waMessage = `Hi Cakes by Aspeya! I would like to confirm my order *${order.reference}*.\n\nHere is my order tracking link:\n${trackingUrl}`;
   const waUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(waMessage)}`;
 
   return (
@@ -40,16 +61,32 @@ export function OrderSuccessClient({ order }: { order: any }) {
         </p>
         
         <div className="text-left space-y-4">
-          {/* STEP 1 */}
-          <div className="rounded-2xl bg-white p-5 border border-olive/10 shadow-sm">
-            <h3 className="font-display text-lg text-ink mb-1">Step 1: Download Receipt</h3>
-            <p className="text-sm text-olive-dark mb-4">Please download your PDF receipt. You will need to attach this in WhatsApp.</p>
+          {/* STEP 1 (Auto Download UI) */}
+          <div className="rounded-2xl bg-white p-5 border border-olive/10 shadow-sm transition-all">
+            <div className="flex items-center justify-between mb-1">
+              <h3 className="font-display text-lg text-ink">
+                {autoDownloaded ? 'Step 1: Receipt Downloaded' : 'Step 1: Downloading Receipt...'}
+              </h3>
+              {autoDownloaded && <span className="text-olive font-bold">✓</span>}
+            </div>
+            
+            <p className="text-sm text-olive-dark mb-4">
+              {autoDownloaded 
+                ? "Your PDF receipt should have downloaded automatically. You will need to attach it in WhatsApp."
+                : "Please wait while we generate your PDF receipt."}
+            </p>
+            
+            {/* Fallback button if the browser blocked the auto-download */}
             <button 
-              onClick={handleDownload} 
+              onClick={downloadPdf} 
               disabled={downloading}
-              className="w-full rounded-full bg-olive px-6 py-3 font-medium text-cream shadow hover:bg-olive-dark transition disabled:opacity-50"
+              className={`w-full rounded-full px-6 py-3 font-medium transition shadow-sm ${
+                autoDownloaded 
+                  ? 'bg-cream-dark text-olive-dark hover:bg-olive hover:text-cream' 
+                  : 'bg-olive text-cream hover:bg-olive-dark'
+              }`}
             >
-              {downloading ? 'Generating...' : '📄 Download PDF Receipt'}
+              {downloading ? 'Generating...' : autoDownloaded ? 'Download Again' : '📄 Click to Download'}
             </button>
           </div>
 
@@ -70,7 +107,7 @@ export function OrderSuccessClient({ order }: { order: any }) {
 
         <div className="mt-8 border-t border-olive/10 pt-6">
           <Link href={`/track/${order.reference}`} className="text-sm text-burgundy hover:underline font-medium">
-            Track your order status →
+            Track your order status here →
           </Link>
         </div>
         

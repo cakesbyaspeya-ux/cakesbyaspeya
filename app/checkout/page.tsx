@@ -1,56 +1,42 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useCart } from '@/components/cart/CartProvider';
-import { StepIndicator } from '@/components/checkout/StepIndicator';
-import { CartList } from '@/components/checkout/CartList';
-import { OrderSummary } from '@/components/checkout/OrderSummary';
 import { DeliveryForm } from '@/components/checkout/DeliveryForm';
+import { OrderSummary } from '@/components/checkout/OrderSummary';
 
 export default function CheckoutPage() {
   const { items } = useCart();
-  const [step, setStep] = useState<1 | 2>(1);
+  const router = useRouter();
 
-  // If cart is empty, show a friendly message
-  if (items.length === 0) {
-    return (
-      <div className="mx-auto max-w-xl px-4 py-24 text-center">
-        <div className="text-6xl opacity-30 mb-4">🛒</div>
-        <h1 className="font-display text-3xl text-ink mb-2">Your order is empty</h1>
-        <p className="text-olive-dark mb-8">Add a cake or dessert to get started.</p>
-        <Link href="/cakes" className="rounded-full bg-burgundy px-8 py-3 text-cream font-medium shadow hover:bg-burgundy-dark transition">
-          Browse Cakes
-        </Link>
-      </div>
-    );
-  }
+  // If cart is empty, instantly kick them back to the cart page
+  useEffect(() => {
+    if (items.length === 0) {
+      router.push('/cart');
+    }
+  }, [items, router]);
+
+  if (items.length === 0) return null; // Prevents flicker before redirect
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 md:py-16">
-      <StepIndicator step={step} />
+      
+      {/* Back button */}
+      <Link href="/cart" className="text-sm font-medium text-olive-dark hover:text-burgundy mb-6 inline-block">
+        ← Back to Cart Summary
+      </Link>
+
+      <h1 className="font-display text-3xl md:text-4xl text-ink mb-8">Delivery Details</h1>
 
       <div className="grid gap-8 lg:grid-cols-[1fr_380px]">
-        {/* Left Side (Cart or Form) */}
+        {/* Left Side: Delivery Form */}
         <div>
-          {step === 1 && (
-            <>
-              <CartList />
-              <div className="mt-8 flex justify-end">
-                <button
-                  onClick={() => setStep(2)}
-                  className="rounded-full bg-burgundy px-8 py-3 text-cream font-medium shadow hover:bg-burgundy-dark transition"
-                >
-                  Continue to Delivery →
-                </button>
-              </div>
-            </>
-          )}
-
-          {step === 2 && <DeliveryForm onBack={() => setStep(1)} />}
+          <DeliveryForm onBack={() => router.push('/cart')} />
         </div>
 
-        {/* Right Side (Sticky Summary) */}
+        {/* Right Side: Sticky Summary */}
         <aside className="lg:sticky lg:top-24 h-fit">
           <OrderSummary />
         </aside>
