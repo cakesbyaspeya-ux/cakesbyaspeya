@@ -48,7 +48,7 @@ export function DeliveryForm({ onBack }: { onBack: () => void }) {
         clearTimeout(timeoutId);
         const { latitude, longitude } = position.coords;
         
-        try {
+               try {
           console.log("Coordinates found:", latitude, longitude);
           
           const res = await fetch('/api/geocode', {
@@ -65,11 +65,12 @@ export function DeliveryForm({ onBack }: { onBack: () => void }) {
             const detectedArea = AREAS.find(a => data.address.includes(a));
             if (detectedArea) setArea(detectedArea);
           } else {
-            alert(`Error from Google API: ${data.error || 'Could not find address'}`);
+            // 👇 This will now show the EXACT Google error instead of a generic one
+            alert(`API Error: ${data.error || 'Could not find address'}`);
           }
         } catch (err) {
           console.error("Fetch error:", err);
-          alert('Failed to connect to the server to get address.');
+          alert('Network error. Check if your dev server is running.');
         } finally {
           setLocating(false);
         }
