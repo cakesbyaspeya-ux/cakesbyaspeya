@@ -1,7 +1,33 @@
 import { notFound } from 'next/navigation';
 import { createServerClient } from '@/lib/supabase/server';
 import { ProductDetailClient } from '@/components/product/ProductDetailClient';
+import { Metadata } from 'next';
+// ... other imports
 
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const sb = await createServerClient();
+  
+  const { data: product } = await sb
+    .from('products')
+    .select('name, short_desc, product_images(url, sort_order)')
+    .eq('slug', slug)
+    .single();
+
+  if (!product) return { title: 'Cake Not Found' };
+
+  const firstImage = product.product_images?.sort((a: any, b: any) => a.sort_order - b.sort_order)[0]?.url;
+
+  return {
+    title: product.name,
+    description: product.short_desc || `Order ${product.name} from Cakes by Aspeya, Chittagong.`,
+    openGraph: {
+      title: `${product.name} | Cakes by Aspeya`,
+      description: product.short_desc || `Order ${product.name} from Cakes by Aspeya, Chittagong.`,
+      images: firstImage ? [{ url: firstImage, width: 800, height: 800 }] : [],
+    },
+  };
+}
 export default async function CakeDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const sb = await createServerClient();

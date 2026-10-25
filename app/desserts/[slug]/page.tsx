@@ -1,11 +1,40 @@
+import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { createServerClient } from '@/lib/supabase/server';
 import { ProductDetailClient } from '@/components/product/ProductDetailClient';
 
+// ── 1. Dynamic SEO Metadata ──
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const sb = await createServerClient();
+  
+  const { data: product } = await sb
+    .from('products')
+    .select('name, short_desc, product_images(url, sort_order)')
+    .eq('slug', slug)
+    .single();
+
+  if (!product) return { title: 'Dessert Not Found' };
+
+  const firstImage = (product.product_images ?? []).sort((a: any, b: any) => a.sort_order - b.sort_order)[0]?.url;
+
+  return {
+    title: product.name,
+    description: product.short_desc || `Order ${product.name} from Cakes by Aspeya, Chittagong.`,
+    openGraph: {
+      title: `${product.name} | Cakes by Aspeya`,
+      description: product.short_desc || `Order ${product.name} from Cakes by Aspeya, Chittagong.`,
+      images: firstImage ? [{ url: firstImage, width: 800, height: 800 }] : [],
+    },
+  };
+}
+
+// ── 2. The Main Page Component ──
 export default async function DessertDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const sb = await createServerClient();
 
+  // Fetch the dessert product
   const { data: product, error } = await sb
     .from('products')
     .select(`
@@ -20,9 +49,11 @@ export default async function DessertDetailPage({ params }: { params: Promise<{ 
     .eq('is_active', true)
     .single();
 
-  if (error || !product) notFound();
+  if (error || !product) {
+    notFound();
+  }
 
-  // Fetch related desserts
+  // Fetch related desserts (excluding current)
   const { data: relatedData } = await sb
     .from('products')
     .select(`
@@ -31,11 +62,19 @@ export default async function DessertDetailPage({ params }: { params: Promise<{ 
       product_sizes(price),
       product_flavours(flavours(name))
     `)
-    .eq('product_type', 'dessert')
+    .eq('product_type', 'dessert') // 👈 Change to dessert here
     .neq('slug', slug)
     .eq('is_active', true)
     .limit(4);
 
+  // Fetch reviews for this dessert
+  const { data: reviews } = await sb
+    .from('reviews')
+    .select('*')
+    .eq('product_id', product.id)
+    .order('created_at', { ascending: false });
+
+  // Format related products for ProductCard
   const relatedProducts = (relatedData ?? []).map((p: any) => {
     const images = (p.product_images ?? []).sort((a: any, b: any) => a.sort_order - b.sort_order).map((i: any) => i.url);
     const validPrices = (p.product_sizes ?? []).map((s: any) => Number(s.price)).filter((n: number) => n > 0);
@@ -44,6 +83,7 @@ export default async function DessertDetailPage({ params }: { params: Promise<{ 
     return { slug: p.slug, name: p.name, product_type: p.product_type, image_layout: p.image_layout, images, from_price, flavours };
   });
 
+  // Format main product data
   const images = (product.product_images ?? [])
     .sort((a: any, b: any) => a.sort_order - b.sort_order)
     .map((i: any, index: number) => ({ id: i.id, url: i.url, label: `Design ${index + 1}` }));
@@ -51,12 +91,6 @@ export default async function DessertDetailPage({ params }: { params: Promise<{ 
   const sizes = (product.product_sizes ?? []).sort((a: any, b: any) => a.sort_order - b.sort_order);
   const variants = (product.product_variants ?? []).sort((a: any, b: any) => a.sort_order - b.sort_order);
   const flavours = (product.product_flavours ?? []).map((pf: any) => pf.flavours).filter(Boolean);
-
-    const { data: reviews } = await sb
-    .from('reviews')
-    .select('*')
-    .eq('product_id', product.id)
-    .order('created_at', { ascending: false });
 
   return (
     <ProductDetailClient
@@ -66,6 +100,7 @@ export default async function DessertDetailPage({ params }: { params: Promise<{ 
         base_price: Number(product.base_price), images, sizes, variants, flavours,
       }}
       relatedProducts={relatedProducts}
+      reviews={reviews || []}
     />
   );
 }

@@ -6,6 +6,7 @@ import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { FloatingWhatsAppButton } from '@/components/layout/FloatingWhatsAppButton';
 import { NoticeBanner } from '@/components/layout/NoticeBanner';
+import { PwaInstallPrompt } from '@/components/layout/PwaInstallPrompt';
 
 // ── Fonts ────────────────────────────────────────────────
 const playfair = Playfair_Display({
@@ -81,6 +82,7 @@ export default function RootLayout({
           <Navbar />
           <main className="min-h-[calc(100vh-200px)]">{children}</main>
           <Footer />
+          <PwaInstallPrompt />
           <FloatingWhatsAppButton />
         </CartProvider>
       </body>
