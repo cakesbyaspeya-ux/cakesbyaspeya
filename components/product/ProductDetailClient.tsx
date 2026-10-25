@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ImageSlideshow } from './ImageSlideshow';
 import { useCart } from '@/components/cart/CartProvider';
-import { ProductCard, type ProductCardData } from './ProductCard'; // 👈 Added import
+import { ProductCard, type ProductCardData } from './ProductCard'; 
 
 const PKR = (n: number) => '৳' + n.toLocaleString('en-BD');
 
@@ -68,7 +68,8 @@ export function ProductDetailClient({ product, relatedProducts = [] }: { product
   }
 
   return (
-    <main className="mx-auto max-w-6xl px-4 py-10 md:py-16">
+    // Added pb-24 md:pb-0 to prevent the sticky bar from covering the footer
+    <main className="mx-auto max-w-6xl px-4 py-10 md:py-16 pb-28 md:pb-16">
       <div className="grid gap-10 md:grid-cols-2">
         
         {/* LEFT: Image Gallery & Thumbnails */}
@@ -190,7 +191,8 @@ export function ProductDetailClient({ product, relatedProducts = [] }: { product
             </div>
           )}
 
-          <div className="mt-8 flex items-center gap-4">
+          {/* Desktop Add to Cart (Hidden on Mobile) */}
+          <div className="mt-8 hidden md:flex items-center gap-4">
             <div className="flex items-center rounded-full border border-olive/30 bg-cream-card">
               <button onClick={() => setQty(q => Math.max(1, q - 1))} className="px-4 py-2 text-olive-dark hover:text-burgundy">−</button>
               <span className="w-6 text-center text-sm font-medium">{qty}</span>
@@ -207,7 +209,7 @@ export function ProductDetailClient({ product, relatedProducts = [] }: { product
           
           <button
             onClick={() => { handleAdd(); router.push('/checkout'); }}
-            className="mt-3 w-full rounded-full border border-olive px-6 py-3.5 text-olive-dark font-medium hover:bg-olive hover:text-cream transition"
+            className="mt-3 w-full hidden md:block rounded-full border border-olive px-6 py-3.5 text-olive-dark font-medium hover:bg-olive hover:text-cream transition"
           >
             Buy Now
           </button>
@@ -223,7 +225,7 @@ export function ProductDetailClient({ product, relatedProducts = [] }: { product
         </div>
       </div>
 
-      {/* 👇 SMART UPSELLS SECTION 👇 */}
+      {/* SMART UPSELLS SECTION */}
       {relatedProducts.length > 0 && (
         <div className="mt-20 pt-10 border-t border-olive/20">
           <div className="mb-8">
@@ -237,6 +239,28 @@ export function ProductDetailClient({ product, relatedProducts = [] }: { product
           </div>
         </div>
       )}
+
+      {/* 👇 STICKY QUICK ADD BAR (MOBILE ONLY) 👇 */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-olive/20 bg-cream/95 p-3 px-4 backdrop-blur-md md:hidden shadow-[0_-10px_20px_-10px_rgba(0,0,0,0.1)]">
+        <div className="flex items-center justify-between gap-4 max-w-lg mx-auto pr-14">
+          
+          {/* Quantity Selector */}
+          <div className="flex items-center rounded-full border border-olive/30 bg-white">
+            <button onClick={() => setQty(q => Math.max(1, q - 1))} className="px-3 py-1.5 text-olive-dark hover:text-burgundy">−</button>
+            <span className="w-5 text-center text-sm font-medium">{qty}</span>
+            <button onClick={() => setQty(q => q + 1)} className="px-3 py-1.5 text-olive-dark hover:text-burgundy">+</button>
+          </div>
+
+          {/* Add to Cart Button */}
+          <button
+            onClick={handleAdd}
+            className="flex-1 rounded-full bg-burgundy px-4 py-3 text-sm text-cream font-medium shadow hover:bg-burgundy-dark transition"
+          >
+            {added ? '✓ Added' : `Add · ${PKR(unitPrice * qty)}`}
+          </button>
+        </div>
+      </div>
+
     </main>
   );
 }
