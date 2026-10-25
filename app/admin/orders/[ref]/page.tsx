@@ -149,6 +149,19 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ re
           <p className="text-olive-dark">Subtotal</p>
           <p className="text-burgundy text-lg">৳{Number(order.subtotal).toLocaleString('en-BD')}</p>
         </div>
+
+                {order.order_upsells && order.order_upsells.length > 0 && (
+          <div className="mt-6 border-t border-olive/10 pt-4">
+            <h3 className="text-sm font-medium text-olive-dark mb-2">Extras / Decorations:</h3>
+            <ul className="space-y-1">
+              {order.order_upsells.map((u: any) => (
+                <li key={u.id} className="text-sm text-ink">
+                  {u.qty}× {u.upsell_name} <span className="text-olive-dark">({PKR ? PKR(u.unit_price * u.qty) : `৳${u.unit_price * u.qty}`})</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </section>
 
       {/* Status Update Buttons */}

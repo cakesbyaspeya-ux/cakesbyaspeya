@@ -5,7 +5,7 @@ import { useCart } from '@/components/cart/CartProvider';
 const PKR = (n: number) => '৳' + n.toLocaleString('en-BD');
 
 export function OrderSummary() {
-  const { subtotal, items } = useCart();
+  const { subtotal, items, upsells } = useCart();
 
   return (
     <div className="rounded-2xl bg-cream-card p-5 md:p-6 ring-1 ring-black/5 shadow-soft">
@@ -16,6 +16,12 @@ export function OrderSummary() {
           <div key={it.key} className="flex justify-between gap-3">
             <span className="truncate">{it.qty}× {it.product_name}</span>
             <span className="shrink-0">{PKR(it.unit_price * it.qty)}</span>
+          </div>
+        ))}
+        {upsells.map((u) => (
+          <div key={u.id} className="flex justify-between gap-3 text-burgundy/80 italic">
+            <span className="truncate">{u.qty}× {u.name}</span>
+            <span className="shrink-0">{PKR(u.price * u.qty)}</span>
           </div>
         ))}
       </div>

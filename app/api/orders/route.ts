@@ -9,7 +9,8 @@ export async function POST(req: Request) {
     const sb = createAdminClient();
     
     const reference = generateReference();
-    const subtotal = body.items.reduce((sum: number, item: any) => sum + (item.unit_price * item.qty), 0);
+    const subtotal = body.items.reduce((sum: number, item: any) => sum + (item.unit_price * item.qty), 0) 
+                   + (body.upsells || []).reduce((sum: number, u: any) => sum + (u.price * u.qty), 0);
 
     // 1. Save order
     const { data: order, error: orderError } = await sb
@@ -51,7 +52,19 @@ export async function POST(req: Request) {
     const { error: itemsError } = await sb.from('order_items').insert(orderItems);
     if (itemsError) throw new Error(itemsError.message);
 
-    // 🔔 Telegram Alert with Tracking Link
+    // 3. Save Upsells (Decorations)
+    if (body.upsells && body.upsells.length > 0) {
+      const orderUpsells = body.upsells.map((u: any) => ({
+        order_id: order.id,
+        upsell_name: u.name,
+        unit_price: u.price,
+        qty: u.qty
+      }));
+      const { error: upsellError } = await sb.from('order_upsells').insert(orderUpsells);
+      if (upsellError) throw new Error(upsellError.message);
+    }
+
+    // 🔔 Telegram Alert
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cakesbyaspeya.vercel.app';
     const trackingLink = `${siteUrl}/track/${reference}`;
 
@@ -65,6 +78,7 @@ ${body.delivery_method === 'delivery' ? `📍 *Area:* ${body.area}` : '🏪 *Pic
 
 📦 *Items:*
 ${orderItems.map((item: any) => `- ${item.qty}x ${item.product_name} ${item.design_label ? `(${item.design_label})` : ''}`).join('\n')}
+${body.upsells?.length ? `\n✨ *Extras:*\n${body.upsells.map((u:any) => `- ${u.qty}x ${u.name}`).join('\n')}` : ''}
 
 💰 *Subtotal:* ৳${subtotal.toLocaleString('en-BD')}
 
@@ -72,7 +86,7 @@ ${orderItems.map((item: any) => `- ${item.qty}x ${item.product_name} ${item.desi
     `;
     await sendTelegramMessage(telegramText);
 
-    // 3. Build WhatsApp Message
+    // 4. Build WhatsApp Message
     const message = buildOrderMessage(
       {
         reference,
@@ -87,12 +101,12 @@ ${orderItems.map((item: any) => `- ${item.qty}x ${item.product_name} ${item.desi
         special_instructions: body.special_instructions,
         subtotal,
         items: orderItems,
+        upsells: body.upsells || []
       },
       'Sanmar Ocean City / 2 No Gate / Women College Mor, Chittagong'
     );
 
     const waUrl = whatsappUrl(message);
-
     return NextResponse.json({ success: true, reference, waUrl });
     
   } catch (error: any) {

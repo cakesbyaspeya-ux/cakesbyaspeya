@@ -21,6 +21,7 @@ export type OrderPayload = {
   special_instructions?: string | null;
   subtotal: number;
   items: OrderItemPayload[];
+  upsells?: any[];
 };
 
 const PKR = (n: number) => '৳' + n.toLocaleString('en-BD');
@@ -35,27 +36,16 @@ export function buildOrderMessage(o: OrderPayload, pickupAddress: string): strin
     return lines.join('\n');
   }).join('\n');
 
-  const isPickup = o.delivery_method === 'pickup';
-  
-  const deliveryBlock = isPickup
-    ? [
-        `Delivery method: pickup`,
-        `Pickup date: ${o.delivery_date}`,
-        `Preferred time: ${o.preferred_time}`,
-        `Pickup location: ${pickupAddress}`,
-      ]
-    : [
-        `Delivery method: delivery`,
-        `Delivery date: ${o.delivery_date}`,
-        `Preferred time: ${o.preferred_time}`,
-        `Area: ${o.area || 'Not specified'}`,
-        `Address: ${o.address || 'Not specified'}`,
-      ];
+  const upsellBlock = o.upsells && o.upsells.length > 0
+    ? `\n\n✨ EXTRAS\n${o.upsells.map((u, i) => `${i + 1}. ${u.name} x${u.qty}`).join('\n')}`
+    : '';
 
-  // 👇 CHANGED HERE: Default fallback is now the vercel.app domain
+  const isPickup = o.delivery_method === 'pickup';
+  const deliveryBlock = isPickup
+    ? [`Delivery method: pickup`, `Pickup date: ${o.delivery_date}`, `Preferred time: ${o.preferred_time}`, `Pickup location: ${pickupAddress}`]
+    : [`Delivery method: delivery`, `Delivery date: ${o.delivery_date}`, `Preferred time: ${o.preferred_time}`, `Area: ${o.area || 'Not specified'}`, `Address: ${o.address || 'Not specified'}`];
+
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cakesbyaspeya.vercel.app';
-  
-  // Clean up the URL to make sure it starts with https:// and doesn't have a trailing slash
   const formattedUrl = (siteUrl.startsWith('http') ? siteUrl : `https://${siteUrl}`).replace(/\/$/, '');
   const trackingLink = `${formattedUrl}/track/${o.reference}`;
 
@@ -68,6 +58,7 @@ export function buildOrderMessage(o: OrderPayload, pickupAddress: string): strin
     ``,
     `ORDER ITEMS`,
     itemBlocks,
+    upsellBlock,
     ``,
     ...deliveryBlock,
     `Special instructions: ${o.special_instructions?.trim() || 'None'}`,
