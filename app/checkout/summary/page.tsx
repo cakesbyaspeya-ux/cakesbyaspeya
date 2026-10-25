@@ -36,18 +36,41 @@ export default function CheckoutSummaryPage() {
     setLoading(true);
     setError(null);
 
+    // 👇 FIX: Map the session storage variables to the exact keys the API expects
     const payload = {
-      ...info,
+      customer_name: info.name,             // Maps "name" to "customer_name"
+      phone: info.phone,
+      whatsapp: info.whatsapp,
+      delivery_method: info.method,         // Maps "method" to "delivery_method"
+      delivery_date: info.date,             // Maps "date" to "delivery_date"
+      preferred_time: info.time,            // Maps "time" to "preferred_time"
+      area: info.area,
+      address: info.address,
+      special_instructions: info.instructions, // Maps "instructions" to "special_instructions"
+      
       promo_code: promoCode,
       discount_amount: discountAmount,
       final_total: total,
+      
       items: items.map(it => ({
-        product_id: it.product_id, product_name: it.product_name, design_id: it.design_id,
-        design_label: it.design_label, image: it.image, custom_design_url: it.custom_design_url,
-        flavour: it.flavour, size_label: it.size_label, cake_message: it.cake_message,
-        unit_price: it.unit_price, qty: it.qty,
+        product_id: it.product_id, 
+        product_name: it.product_name, 
+        design_id: it.design_id,
+        design_label: it.design_label, 
+        image: it.image, 
+        custom_design_url: it.custom_design_url,
+        flavour: it.flavour, 
+        size_label: it.size_label, 
+        cake_message: it.cake_message,
+        unit_price: it.unit_price, 
+        qty: it.qty,
       })),
-      upsells: upsells.map(u => ({ id: u.id, name: u.name, price: u.price, qty: u.qty }))
+      upsells: upsells.map(u => ({ 
+        id: u.id, 
+        name: u.name, 
+        price: u.price, 
+        qty: u.qty 
+      }))
     };
 
     try {
@@ -122,7 +145,7 @@ export default function CheckoutSummaryPage() {
             {info.instructions && (
               <div className="mt-3 pt-3 border-t border-olive/10">
                 <p className="text-xs text-olive-dark uppercase tracking-wide font-medium mb-1">Special Instructions</p>
-                <p className="text-sm italic text-burgundy">"{info.instructions}"</p>
+                <p className="text-sm italic text-burgundy">&quot;{info.instructions}&quot;</p>
               </div>
             )}
           </div>
