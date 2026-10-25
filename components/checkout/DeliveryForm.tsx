@@ -117,6 +117,7 @@ export function DeliveryForm({ onBack }: { onBack: () => void }) {
         cake_message: it.cake_message,
         unit_price: it.unit_price,
         qty: it.qty,
+        custom_design_url: it.custom_design_url, // 👈 Add this
       })),
       upsells: upsells.map(u => ({
         id: u.id,

@@ -10,6 +10,7 @@ export type CartItem = {
   image: string;
   design_id?: string | null;    
   design_label?: string | null; 
+  custom_design_url?: string | null; // 👈 Added
   variant?: string | null;
   flavour?: string | null;
   size_label?: string | null;
@@ -17,6 +18,7 @@ export type CartItem = {
   unit_price: number;
   qty: number;
 };
+
 
 export type UpsellItem = {
   id: string;
@@ -92,7 +94,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const add: CartContextValue['add'] = (item) => {
     const key = [
       item.product_id, item.variant ?? '', item.flavour ?? '',
-      item.size_label ?? '', item.cake_message ?? '', item.design_id ?? '',
+      item.size_label ?? '', item.cake_message ?? '', 
+      item.design_id ?? '', item.custom_design_url ?? '', // 👈 Added
     ].join('|');
     setItems((prev) => {
       const existing = prev.find((i) => i.key === key);

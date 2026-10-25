@@ -49,6 +49,7 @@ export async function POST(req: Request) {
       unit_price: item.unit_price,
       qty: item.qty,
       line_total: item.unit_price * item.qty,
+      custom_design_url: item.custom_design_url || null,
     }));
 
     const { error: itemsError } = await sb.from('order_items').insert(orderItems);
@@ -79,8 +80,7 @@ export async function POST(req: Request) {
 ${body.delivery_method === 'delivery' ? `📍 *Area:* ${body.area}` : '🏪 *Pickup*'}
 
 📦 *Items:*
-${orderItems.map((item: any) => `- ${item.qty}x ${item.product_name}`).join('\n')}
-${body.upsells?.length ? `\n✨ *Extras:*\n${body.upsells.map((u:any) => `- ${u.qty}x ${u.name}`).join('\n')}` : ''}
+${orderItems.map((item: any) => `- ${item.qty}x ${item.product_name} ${item.custom_design_url ? `\n   🖼️ [View Custom Design](${item.custom_design_url})` : ''}`).join('\n')}
 
 💰 *Subtotal:* ৳${subtotal.toLocaleString('en-BD')}
 
