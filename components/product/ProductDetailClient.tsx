@@ -36,10 +36,11 @@ export function ProductDetailClient({
   const [customDesignUrl, setCustomDesignUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
-  // Reset the "Added" button if the user changes any selection
+  // 👇 FIX 1: Removed 'activeImageIndex' from the dependency array
+  // so the auto-slideshow doesn't reset the button.
   useEffect(() => {
     setAdded(false);
-  }, [sizeId, variantId, flavourId, cakeMessage, qty, activeImageIndex, customDesignUrl]);
+  }, [sizeId, variantId, flavourId, cakeMessage, qty, customDesignUrl]);
 
   // Recently viewed tracker
   useEffect(() => {
@@ -86,7 +87,6 @@ export function ProductDetailClient({
     setAdded(true);
   }
 
-  // 👇 FIXED: Buy Now goes to /checkout/info and clears old cart items
   function handleBuyNow() {
     clear(); 
     add(itemPayload);
@@ -136,7 +136,11 @@ export function ProductDetailClient({
                 <button
                   type="button"
                   key={img.id}
-                  onClick={() => setActiveImageIndex(i)}
+                  onClick={() => {
+                    // 👇 FIX 2: Reset the button manually if they click a new thumbnail
+                    setActiveImageIndex(i);
+                    setAdded(false);
+                  }}
                   className={`aspect-square overflow-hidden rounded-lg bg-cream-dark ring-2 transition-all ${
                     activeImageIndex === i ? 'ring-burgundy scale-95 shadow-sm' : 'ring-transparent hover:ring-olive/50'
                   }`}
@@ -297,9 +301,8 @@ export function ProductDetailClient({
         </div>
       )}
 
-            {/* MOBILE STICKY QUICK ADD BAR */}
+      {/* MOBILE STICKY QUICK ADD BAR */}
       <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-olive/20 bg-cream/95 p-3 px-4 backdrop-blur-md md:hidden shadow-[0_-10px_20px_-10px_rgba(0,0,0,0.1)]">
-        {/* 👇 Removed pr-14, changed to standard max-w-lg */}
         <div className="flex items-center justify-between gap-4 max-w-lg mx-auto">
           <div className="flex items-center rounded-full border border-olive/30 bg-white">
             <button type="button" onClick={() => setQty(q => Math.max(1, q - 1))} className="px-3 py-1.5 text-olive-dark">−</button>
