@@ -5,13 +5,21 @@ import { useRouter } from 'next/navigation';
 import { ImageSlideshow } from './ImageSlideshow';
 import { useCart } from '@/components/cart/CartProvider';
 import { ProductCard, type ProductCardData } from './ProductCard'; 
-import { createClient } from '@/lib/supabase/client'; // 👈 Import Supabase
+import { createClient } from '@/lib/supabase/client';
 
 const PKR = (n: number) => '৳' + n.toLocaleString('en-BD');
 
-export function ProductDetailClient({ product, relatedProducts = [], reviews = [] }: { product: any, relatedProducts?: ProductCardData[], reviews?: any[] }) {
+export function ProductDetailClient({ 
+  product, 
+  relatedProducts = [], 
+  reviews = [] 
+}: { 
+  product: any, 
+  relatedProducts?: ProductCardData[], 
+  reviews?: any[] 
+}) {
   const router = useRouter();
-  const { add } = useCart();
+  const { add, clear } = useCart(); // 👈 Added 'clear' here
   const sb = createClient();
 
   const [sizeId, setSizeId] = useState<string | null>(
@@ -28,6 +36,12 @@ export function ProductDetailClient({ product, relatedProducts = [], reviews = [
   const [customDesignUrl, setCustomDesignUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
+  // 👇 FIX 1: Reset the "Added" button if the user changes any selection
+  useEffect(() => {
+    setAdded(false);
+  }, [sizeId, variantId, flavourId, cakeMessage, qty, activeImageIndex, customDesignUrl]);
+
+  // Recently viewed tracker
   useEffect(() => {
     try {
       const stored = localStorage.getItem('cba_recently_viewed');
@@ -51,12 +65,40 @@ export function ProductDetailClient({ product, relatedProducts = [], reviews = [
     return price;
   }, [selectedSize, selectedVariant, selectedFlavour, product.base_price]);
 
+  // Centralized payload so we don't repeat ourselves
+  const itemPayload = useMemo(() => ({
+    product_id: product.id,
+    product_slug: product.slug,
+    product_name: product.name,
+    image: selectedImageObj?.url || '',
+    design_id: selectedImageObj?.id || null,
+    design_label: selectedImageObj?.label || null,
+    custom_design_url: customDesignUrl,
+    variant: selectedVariant?.name ?? null,
+    flavour: selectedFlavour?.name ?? null,
+    size_label: selectedSize?.label ?? null,
+    cake_message: cakeMessage.trim() || null,
+    unit_price: unitPrice,
+    qty,
+  }), [product, selectedImageObj, customDesignUrl, selectedVariant, selectedFlavour, selectedSize, cakeMessage, unitPrice, qty]);
+
+  function handleAdd() {
+    add(itemPayload);
+    setAdded(true); // Sets the button to "✓ Added to Order"
+  }
+
+  // 👇 FIX 2: Clear cart before adding, so "Buy Now" only buys this cake
+  function handleBuyNow() {
+    clear(); 
+    add(itemPayload);
+    router.push('/checkout');
+  }
+
   // Handle File Upload to Supabase Storage
   async function handleDesignUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Check file size (Supabase default limit is 5MB for free tier)
     if (file.size > 5 * 1024 * 1024) {
       alert('File is too large. Please upload an image under 5MB.');
       return;
@@ -69,34 +111,12 @@ export function ProductDetailClient({ product, relatedProducts = [], reviews = [
     const { error } = await sb.storage.from('customer-designs').upload(fileName, file);
     
     if (error) {
-      // 👇 This will now show the EXACT Supabase error
       alert(`Upload failed: ${error.message}`);
-      console.error("Storage Error:", error);
     } else {
       const { data: { publicUrl } } = sb.storage.from('customer-designs').getPublicUrl(fileName);
       setCustomDesignUrl(publicUrl);
     }
     setUploading(false);
-  }
-  function handleAdd() {
-    add({
-      product_id: product.id,
-      product_slug: product.slug,
-      product_name: product.name,
-      image: selectedImageObj?.url || '',
-      design_id: selectedImageObj?.id || null,
-      design_label: selectedImageObj?.label || null,
-      custom_design_url: customDesignUrl, // 👈 Pass custom design
-      variant: selectedVariant?.name ?? null,
-      flavour: selectedFlavour?.name ?? null,
-      size_label: selectedSize?.label ?? null,
-      cake_message: cakeMessage.trim() || null,
-      unit_price: unitPrice,
-      qty,
-    });
-
-    setAdded(true);
-    setTimeout(() => setAdded(false), 2000);
   }
 
   return (
@@ -141,7 +161,7 @@ export function ProductDetailClient({ product, relatedProducts = [], reviews = [
 
           <div className="mt-6 text-3xl font-display text-burgundy">{PKR(unitPrice)}</div>
 
-          {/* Size, Variant, Flavour Selectors (Same as before) */}
+          {/* Size, Variant, Flavour Selectors */}
           {product.allows_size && product.sizes.length > 0 && (
             <div className="mt-6">
               <label className="block text-sm font-medium mb-2 text-ink">Size / weight</label>
@@ -196,7 +216,7 @@ export function ProductDetailClient({ product, relatedProducts = [], reviews = [
             </div>
           )}
 
-          {/* 👇 CUSTOM DESIGN UPLOAD 👇 */}
+          {/* CUSTOM DESIGN UPLOAD */}
           <div className="mt-6 border-t border-olive/20 pt-6">
             <label className="block text-sm font-medium mb-2 text-ink">
               Upload your own design <span className="text-olive-dark text-xs">(Optional)</span>
@@ -215,7 +235,7 @@ export function ProductDetailClient({ product, relatedProducts = [], reviews = [
             )}
           </div>
 
-          {/* Add to Cart (Desktop) */}
+          {/* DESKTOP ADD TO CART */}
           <div className="mt-8 hidden md:flex items-center gap-4">
             <div className="flex items-center rounded-full border border-olive/30 bg-cream-card">
               <button onClick={() => setQty(q => Math.max(1, q - 1))} className="px-4 py-2 text-olive-dark hover:text-burgundy">−</button>
@@ -223,12 +243,17 @@ export function ProductDetailClient({ product, relatedProducts = [], reviews = [
               <button onClick={() => setQty(q => q + 1)} className="px-4 py-2 text-olive-dark hover:text-burgundy">+</button>
             </div>
             
-            <button onClick={handleAdd} className="flex-1 rounded-full bg-burgundy px-6 py-3.5 text-cream font-medium shadow hover:bg-burgundy-dark transition">
+            {/* 👇 Button stays green if added, resets to burgundy if changed */}
+            <button onClick={handleAdd} className={`flex-1 rounded-full px-6 py-3.5 text-cream font-medium shadow transition-colors ${
+              added ? 'bg-olive' : 'bg-burgundy hover:bg-burgundy-dark'
+            }`}>
               {added ? '✓ Added to Order' : `Add to Order · ${PKR(unitPrice * qty)}`}
             </button>
           </div>
           
-          <button onClick={() => { handleAdd(); router.push('/checkout'); }} className="mt-3 w-full hidden md:block rounded-full border border-olive px-6 py-3.5 text-olive-dark font-medium hover:bg-olive hover:text-cream transition">Buy Now</button>
+          <button onClick={handleBuyNow} className="mt-3 w-full hidden md:block rounded-full border border-olive px-6 py-3.5 text-olive-dark font-medium hover:bg-olive hover:text-cream transition">
+            Buy Now
+          </button>
 
           {product.long_desc && (
             <div className="mt-8 border-t border-olive/20 pt-6">
@@ -244,7 +269,14 @@ export function ProductDetailClient({ product, relatedProducts = [], reviews = [
         <div className="mt-20 pt-10 border-t border-olive/20">
           <div className="mb-8">
             <h2 className="font-display text-2xl md:text-3xl text-ink">You Might Also Like</h2>
-                  {/* 👇 PRODUCT REVIEWS SECTION 👇 */}
+          </div>
+          <div className="grid grid-cols-2 gap-4 md:gap-6 lg:grid-cols-3 xl:grid-cols-4">
+            {relatedProducts.map((p) => <ProductCard key={p.slug} product={p} />)}
+          </div>
+        </div>
+      )}
+
+      {/* PRODUCT REVIEWS */}
       {reviews.length > 0 && (
         <div className="mt-20 pt-10 border-t border-olive/20">
           <h2 className="font-display text-2xl md:text-3xl text-ink mb-6">Customer Reviews</h2>
@@ -257,21 +289,15 @@ export function ProductDetailClient({ product, relatedProducts = [], reviews = [
                     {'★'.repeat(rev.rating)}{'☆'.repeat(5 - rev.rating)}
                   </span>
                 </div>
-                {rev.comment && <p className="text-sm text-olive-dark italic">"{rev.comment}"</p>}
+                {rev.comment && <p className="text-sm text-olive-dark italic">&quot;{rev.comment}&quot;</p>}
                 <p className="text-xs text-olive-dark/60 mt-3">{new Date(rev.created_at).toLocaleDateString()}</p>
               </div>
             ))}
           </div>
         </div>
       )}
-          </div>
-          <div className="grid grid-cols-2 gap-4 md:gap-6 lg:grid-cols-3 xl:grid-cols-4">
-            {relatedProducts.map((p) => <ProductCard key={p.slug} product={p} />)}
-          </div>
-        </div>
-      )}
 
-      {/* STICKY QUICK ADD BAR (MOBILE) */}
+      {/* MOBILE STICKY QUICK ADD BAR */}
       <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-olive/20 bg-cream/95 p-3 px-4 backdrop-blur-md md:hidden shadow-[0_-10px_20px_-10px_rgba(0,0,0,0.1)]">
         <div className="flex items-center justify-between gap-4 max-w-lg mx-auto pr-14">
           <div className="flex items-center rounded-full border border-olive/30 bg-white">
@@ -279,7 +305,9 @@ export function ProductDetailClient({ product, relatedProducts = [], reviews = [
             <span className="w-5 text-center text-sm font-medium">{qty}</span>
             <button onClick={() => setQty(q => q + 1)} className="px-3 py-1.5 text-olive-dark">+</button>
           </div>
-          <button onClick={handleAdd} className="flex-1 rounded-full bg-burgundy px-4 py-3 text-sm text-cream font-medium shadow hover:bg-burgundy-dark transition">
+          <button onClick={handleAdd} className={`flex-1 rounded-full px-4 py-3 text-sm text-cream font-medium shadow transition-colors ${
+            added ? 'bg-olive' : 'bg-burgundy hover:bg-burgundy-dark'
+          }`}>
             {added ? '✓ Added' : `Add · ${PKR(unitPrice * qty)}`}
           </button>
         </div>
