@@ -7,9 +7,15 @@ import { useCart } from '@/components/cart/CartProvider';
 export function DeliveryForm({ onBack }: { onBack: () => void }) {
   const router = useRouter();
   const { items, upsells, promoCode, discountAmount, total, clear } = useCart();
+  
   const [method, setMethod] = useState<'delivery' | 'pickup'>('delivery');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Address states
+  const [address, setAddress] = useState('');
+  const [area, setArea] = useState('');
+  const [locating, setLocating] = useState(false);
 
   const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
   const minDate = tomorrow.toISOString().split('T')[0];
@@ -19,6 +25,49 @@ export function DeliveryForm({ onBack }: { onBack: () => void }) {
     'Double Mooring', 'Pahartali', 'Chandgaon', 'Bayezid', 'Bakalia', 
     'Patenga', 'Bandar'
   ];
+
+  // Handle Current Location Button
+  async function handleUseCurrentLocation() {
+    if (!navigator.geolocation) {
+      alert('Geolocation is not supported by your browser');
+      return;
+    }
+
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        try {
+          // Call our backend geocode API to avoid exposing the key
+          const res = await fetch('/api/geocode', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ lat: latitude, lng: longitude }),
+          });
+          const data = await res.json();
+          
+          if (res.ok && data.address) {
+            setAddress(data.address);
+            
+            // Try to auto-detect the Chittagong area from the address string
+            const detectedArea = AREAS.find(a => data.address.includes(a));
+            if (detectedArea) setArea(detectedArea);
+          } else {
+            alert('Could not get address from your location.');
+          }
+        } catch (err) {
+          alert('Failed to fetch address.');
+        } finally {
+          setLocating(false);
+        }
+      },
+      (err) => {
+        alert('Please allow location access in your browser settings.');
+        setLocating(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -35,12 +84,12 @@ export function DeliveryForm({ onBack }: { onBack: () => void }) {
       delivery_method: method,
       delivery_date: data.date,
       preferred_time: data.time,
-      area: method === 'delivery' ? data.area : null,
-      address: method === 'delivery' ? data.address : null,
+      area: method === 'delivery' ? area : null,
+      address: method === 'delivery' ? address : null,
       special_instructions: data.instructions,
       promo_code: promoCode,
       discount_amount: discountAmount,
-      final_total: total, // Add this so the backend knows the exact total
+      final_total: total,
       items: items.map(it => ({
         product_id: it.product_id,
         product_name: it.product_name,
@@ -52,17 +101,13 @@ export function DeliveryForm({ onBack }: { onBack: () => void }) {
         cake_message: it.cake_message,
         unit_price: it.unit_price,
         qty: it.qty,
-
-        
       })),
-      // Add upsells to payload
       upsells: upsells.map(u => ({
         id: u.id,
         name: u.name,
         price: u.price,
         qty: u.qty
       }))
-      
     };
 
     try {
@@ -153,17 +198,44 @@ export function DeliveryForm({ onBack }: { onBack: () => void }) {
       {method === 'delivery' && (
         <fieldset className="rounded-2xl bg-cream-card p-5 md:p-6 ring-1 ring-black/5 space-y-4">
           <legend className="px-2 text-sm font-medium text-olive-dark">Delivery address</legend>
+          
           <label className="block">
             <span className="mb-1 block text-sm font-medium text-ink">Area</span>
-            <select name="area" className="input" required defaultValue="">
+            <select 
+              name="area" 
+              value={area}
+              onChange={(e) => setArea(e.target.value)}
+              className="input" 
+              required 
+            >
               <option value="" disabled>Select your area</option>
               {AREAS.map(a => <option key={a} value={a}>{a}</option>)}
             </select>
           </label>
-          <label className="block">
+
+          <div className="block">
             <span className="mb-1 block text-sm font-medium text-ink">Full address</span>
-            <textarea name="address" rows={3} placeholder="House, road, landmark..." className="input" required />
-          </label>
+            
+            <textarea 
+              name="address" 
+              rows={3} 
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              placeholder="House, road, landmark..." 
+              className="input" 
+              required 
+            />
+
+            {/* Use Current Location Button */}
+            <button
+              type="button"
+              onClick={handleUseCurrentLocation}
+              disabled={locating}
+              className="mt-2 flex items-center gap-2 text-sm font-medium text-burgundy hover:text-burgundy-dark transition disabled:opacity-50"
+            >
+              {locating ? '📍 Getting location...' : '📍 Use my current location'}
+            </button>
+          </div>
         </fieldset>
       )}
 
