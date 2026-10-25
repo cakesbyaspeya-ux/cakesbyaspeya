@@ -19,7 +19,6 @@ export default function CheckoutSummaryPage() {
   useEffect(() => {
     setIsMounted(true);
     
-    // Safety check: if cart is empty, go back to cart
     if (items.length === 0) {
       router.replace('/cart');
       return;
@@ -27,7 +26,6 @@ export default function CheckoutSummaryPage() {
 
     const saved = sessionStorage.getItem('cba_checkout_info');
     if (!saved) {
-      // If they skipped the info page, send them there
       router.replace('/checkout/info');
     } else {
       setInfo(JSON.parse(saved));
@@ -54,8 +52,11 @@ export default function CheckoutSummaryPage() {
 
     try {
       const res = await fetch('/api/orders', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify(payload),
       });
+      
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || 'Failed to place order');
 
@@ -70,7 +71,6 @@ export default function CheckoutSummaryPage() {
     }
   }
 
-  // 👇 1. Show a loading state instead of a blank screen while checking data
   if (!isMounted || (!info && items.length > 0)) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center">
@@ -80,46 +80,91 @@ export default function CheckoutSummaryPage() {
     );
   }
 
-  // If cart is empty, the useEffect will redirect, but we return null for a split second
   if (items.length === 0) return null;
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 md:py-16">
-      <Link href="/checkout/info" className="text-sm font-medium text-olive-dark hover:text-burgundy mb-6 inline-block">← Edit Customer Info</Link>
-      <h1 className="font-display text-3xl md:text-4xl text-ink mb-8">Review & Place Order</h1>
+      <Link href="/checkout/info" className="text-sm font-medium text-olive-dark hover:text-burgundy mb-6 inline-block">
+        ← Edit Customer Info
+      </Link>
+      
+      <h1 className="font-display text-3xl md:text-4xl text-ink mb-8">Review & Confirm Order</h1>
 
       <div className="grid gap-8 lg:grid-cols-[1fr_380px]">
+        
+        {/* ── LEFT COLUMN: Info & Items ── */}
         <div className="space-y-6">
           
-          {/* Delivery Recap Card */}
+          {/* 1. Customer Info Recap */}
           <div className="rounded-2xl bg-cream-card p-5 md:p-6 ring-1 ring-black/5">
-            <h2 className="font-display text-lg border-b border-olive/20 pb-2 mb-3">Delivering To</h2>
-            <p className="font-medium text-ink">{info.name} · {info.phone}</p>
-            <p className="text-sm text-olive-dark mt-1">{info.method === 'pickup' ? 'Store Pickup' : `${info.area} - ${info.address}`}</p>
-            <p className="text-sm text-olive-dark mt-1">Scheduled: {info.date} at {info.time}</p>
-            {info.instructions && <p className="text-sm italic text-burgundy mt-2">Note: "{info.instructions}"</p>}
+            <h2 className="font-display text-lg border-b border-olive/20 pb-2 mb-3">Check Your Details</h2>
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs text-olive-dark uppercase tracking-wide font-medium mb-1">Contact</p>
+                <p className="font-medium text-ink">{info.name}</p>
+                <p className="text-sm text-olive-dark">{info.phone}</p>
+                {info.whatsapp && info.whatsapp !== info.phone && (
+                  <p className="text-sm text-olive-dark">WA: {info.whatsapp}</p>
+                )}
+              </div>
+              <div>
+                <p className="text-xs text-olive-dark uppercase tracking-wide font-medium mb-1">
+                  {info.method === 'pickup' ? 'Pickup Schedule' : 'Delivery Details'}
+                </p>
+                <p className="font-medium text-ink">{info.date} at {info.time}</p>
+                {info.method === 'pickup' ? (
+                  <p className="text-sm text-olive-dark">Store Pickup</p>
+                ) : (
+                  <p className="text-sm text-olive-dark">{info.area} - {info.address}</p>
+                )}
+              </div>
+            </div>
+            {info.instructions && (
+              <div className="mt-3 pt-3 border-t border-olive/10">
+                <p className="text-xs text-olive-dark uppercase tracking-wide font-medium mb-1">Special Instructions</p>
+                <p className="text-sm italic text-burgundy">"{info.instructions}"</p>
+              </div>
+            )}
           </div>
 
-          {/* Cart Items */}
-          <CartList />
-          
-          {error && <div className="rounded-xl bg-burgundy/10 p-4 text-sm text-burgundy">{error}</div>}
-
-          <div className="flex justify-end pt-4">
-            <button 
-              onClick={handlePlaceOrder} 
-              disabled={loading}
-              className="w-full sm:w-auto rounded-full bg-whatsapp px-8 py-4 text-lg font-medium text-white shadow hover:brightness-95 disabled:opacity-50 transition flex items-center justify-center gap-2"
-            >
-              {loading ? 'Processing...' : 'Confirm & Place Order →'}
-            </button>
+          {/* 2. Order Items */}
+          <div>
+            <h2 className="font-display text-lg mb-3">Your Items</h2>
+            <CartList />
           </div>
+
         </div>
 
-        <aside className="lg:sticky lg:top-24 h-fit">
+        {/* ── RIGHT COLUMN: Promo & Summary ── */}
+        <aside className="lg:sticky lg:top-24 h-fit flex flex-col gap-4">
+          
+          {/* 3. Promo Code & Payment Summary */}
           <OrderSummary />
+
+          {error && <div className="rounded-xl bg-burgundy/10 p-4 text-sm text-burgundy">{error}</div>}
+
+          {/* 4. Confirm Order Button (Visible on Desktop) */}
+          <button 
+            onClick={handlePlaceOrder} 
+            disabled={loading}
+            className="hidden lg:flex w-full rounded-full bg-whatsapp px-8 py-4 text-lg font-medium text-white shadow hover:brightness-95 disabled:opacity-50 transition items-center justify-center gap-2"
+          >
+            {loading ? 'Processing...' : 'Confirm Order →'}
+          </button>
         </aside>
       </div>
+
+      {/* 4. Confirm Order Button (Visible on Mobile at the bottom) */}
+      <div className="mt-8 lg:hidden">
+        <button 
+          onClick={handlePlaceOrder} 
+          disabled={loading}
+          className="w-full rounded-full bg-whatsapp px-8 py-4 text-lg font-medium text-white shadow hover:brightness-95 disabled:opacity-50 transition flex items-center justify-center gap-2"
+        >
+          {loading ? 'Processing...' : 'Confirm Order →'}
+        </button>
+      </div>
+
     </div>
   );
 }
