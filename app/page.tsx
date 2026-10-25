@@ -60,6 +60,12 @@ export default async function HomePage() {
           <div className="relative aspect-square w-full overflow-hidden rounded-3xl bg-cream-dark shadow-soft">
             {heroImage ? (
               // eslint-disable-next-line @next/next/no-img-element
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img 
+                src={`https://images.unsplash.com/photo-1578985545062-69928b1d9587?q=80&w=400&auto=format&fit=crop&sig=${i}`} 
+                alt="Instagram post" 
+                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" 
+              />
               <img
                 src={heroImage}
                 alt="Featured cake by Cakes by Aspeya"
@@ -315,6 +321,12 @@ export default async function HomePage() {
             >
               {/* Replace with your actual Instagram image URLs */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img 
+                src={`https://images.unsplash.com/photo-1578985545062-69928b1d9587?q=80&w=400&auto=format&fit=crop&sig=${i}`} 
+                alt="Instagram post" 
+                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" 
+              />
               <img
                 src={`https://images.unsplash.com/photo-1578985545062-69928b1d9587?q=80&w=400&auto=format&fit=crop&sig=${i}`}
                 alt={`Cake inspiration ${i}`}
