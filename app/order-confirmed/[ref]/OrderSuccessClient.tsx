@@ -1,29 +1,37 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { generateReceiptPdf } from '@/lib/generateReceiptPdf';
+import { useCart } from '@/components/cart/CartProvider';
 
 export function OrderSuccessClient({ order }: { order: any }) {
   const [downloading, setDownloading] = useState(false);
+  const { clear } = useCart();
 
-  // 1. Generate and Download PDF
+  // 👇 Clear the cart safely once the page loads
+  useEffect(() => {
+    clear();
+    sessionStorage.removeItem('cba_checkout_info');
+  }, [clear]);
+
   function handleDownload() {
     setDownloading(true);
     try {
       const doc = generateReceiptPdf(order);
       doc.save(`Receipt-${order.reference}.pdf`);
     } catch (err) {
-      console.error("PDF Error:", err);
-      alert('Failed to download PDF. Please check the console.');
+      alert('Failed to download PDF.');
     } finally {
       setDownloading(false);
     }
   }
 
-  // 2. Custom WhatsApp Message (Telling you they are sending the PDF)
   const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '8801519409555';
-  const waMessage = `Hi Cakes by Aspeya! I would like to confirm my order *${order.reference}*.`;
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cakesbyaspeya.vercel.app';
+  const trackingUrl = `${siteUrl}/track/${order.reference}`;
+  
+  const waMessage = `Hi Cakes by Aspeya! I would like to confirm my order *${order.reference}*.\n\nHere is my order tracking link:\n${trackingUrl}`;
   const waUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(waMessage)}`;
 
   return (
@@ -40,7 +48,6 @@ export function OrderSuccessClient({ order }: { order: any }) {
         </p>
         
         <div className="text-left space-y-4">
-          {/* STEP 1 */}
           <div className="rounded-2xl bg-white p-5 border border-olive/10 shadow-sm">
             <h3 className="font-display text-lg text-ink mb-1">Step 1: Download Receipt</h3>
             <p className="text-sm text-olive-dark mb-4">Please download your PDF receipt. You will need to attach this in WhatsApp.</p>
@@ -53,7 +60,6 @@ export function OrderSuccessClient({ order }: { order: any }) {
             </button>
           </div>
 
-          {/* STEP 2 */}
           <div className="rounded-2xl bg-white p-5 border border-olive/10 shadow-sm">
             <h3 className="font-display text-lg text-ink mb-1">Step 2: Send on WhatsApp</h3>
             <p className="text-sm text-olive-dark mb-4">Tap below to open WhatsApp, then <strong>attach the PDF</strong> you just downloaded.</p>
@@ -70,10 +76,9 @@ export function OrderSuccessClient({ order }: { order: any }) {
 
         <div className="mt-8 border-t border-olive/10 pt-6">
           <Link href={`/track/${order.reference}`} className="text-sm text-burgundy hover:underline font-medium">
-            Track your order status →
+            Track your order status here →
           </Link>
         </div>
-        
       </div>
     </div>
   );

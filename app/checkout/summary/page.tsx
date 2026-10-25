@@ -9,7 +9,7 @@ import { OrderSummary } from '@/components/checkout/OrderSummary';
 
 export default function CheckoutSummaryPage() {
   const router = useRouter();
-  const { items, upsells, promoCode, discountAmount, total, clear } = useCart();
+  const { items, upsells, promoCode, discountAmount, total } = useCart();
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -19,11 +19,13 @@ export default function CheckoutSummaryPage() {
   useEffect(() => {
     setIsMounted(true);
     
+    // If cart is empty, go back to cart page
     if (items.length === 0) {
       router.replace('/cart');
       return;
     }
 
+    // Check if customer info exists
     const saved = sessionStorage.getItem('cba_checkout_info');
     if (!saved) {
       router.replace('/checkout/info');
@@ -36,17 +38,17 @@ export default function CheckoutSummaryPage() {
     setLoading(true);
     setError(null);
 
-    // 👇 FIX: Map the session storage variables to the exact keys the API expects
+    // Map the session storage variables to the exact keys the API expects
     const payload = {
-      customer_name: info.name,             // Maps "name" to "customer_name"
+      customer_name: info.name,
       phone: info.phone,
       whatsapp: info.whatsapp,
-      delivery_method: info.method,         // Maps "method" to "delivery_method"
-      delivery_date: info.date,             // Maps "date" to "delivery_date"
-      preferred_time: info.time,            // Maps "time" to "preferred_time"
+      delivery_method: info.method,
+      delivery_date: info.date,
+      preferred_time: info.time,
       area: info.area,
       address: info.address,
-      special_instructions: info.instructions, // Maps "instructions" to "special_instructions"
+      special_instructions: info.instructions,
       
       promo_code: promoCode,
       discount_amount: discountAmount,
@@ -83,11 +85,14 @@ export default function CheckoutSummaryPage() {
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || 'Failed to place order');
 
+      // Save order ref and redirect to success page
       sessionStorage.setItem('cba_last_order', JSON.stringify({ ref: json.reference, waUrl: json.waUrl }));
-      clear();
-      sessionStorage.removeItem('cba_checkout_info');
+      
+      // Note: We intentionally DO NOT clear the cart here. 
+      // The OrderSuccessClient page will handle clearing the cart and sessionStorage.
       
       router.push(`/order-confirmed/${json.reference}`);
+      
     } catch (err: any) {
       setError(err.message);
       setLoading(false);
@@ -168,6 +173,7 @@ export default function CheckoutSummaryPage() {
 
           {/* 4. Confirm Order Button (Visible on Desktop) */}
           <button 
+            type="button"
             onClick={handlePlaceOrder} 
             disabled={loading}
             className="hidden lg:flex w-full rounded-full bg-whatsapp px-8 py-4 text-lg font-medium text-white shadow hover:brightness-95 disabled:opacity-50 transition items-center justify-center gap-2"
@@ -180,6 +186,7 @@ export default function CheckoutSummaryPage() {
       {/* 4. Confirm Order Button (Visible on Mobile at the bottom) */}
       <div className="mt-8 lg:hidden">
         <button 
+          type="button"
           onClick={handlePlaceOrder} 
           disabled={loading}
           className="w-full rounded-full bg-whatsapp px-8 py-4 text-lg font-medium text-white shadow hover:brightness-95 disabled:opacity-50 transition flex items-center justify-center gap-2"
