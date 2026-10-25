@@ -99,7 +99,7 @@ export function generateReceiptPdf(order: ReceiptOrder) {
   // A custom-height receipt avoids an A4 page and gives the receipt
   // a narrow, thermal-printer-inspired appearance.
   const estimatedHeight =
-    190 +
+    155 +
     items.reduce((sum, item) => {
       const details = [
         item.size_label,
@@ -493,29 +493,18 @@ export function generateReceiptPdf(order: ReceiptOrder) {
   center(reference, y);
   y += 8;
 
-  // =================================================
-  // 8. THANK-YOU MESSAGE
-  // =================================================
+// =================================================
+// 8. THANK-YOU MESSAGE
+// =================================================
 
-  doc.setFont('courier', 'bold');
-  doc.setFontSize(9);
-  doc.setTextColor(...C.burgundy);
+doc.setFont('courier', 'bold');
+doc.setFontSize(9);
+doc.setTextColor(...C.burgundy);
 
-  center('Thank you for your order!', y);
-  y += 6;
+center('Thank you for your order!', y);
 
-  doc.setFont('courier', 'normal');
-  doc.setFontSize(8);
-  doc.setTextColor(...C.black);
+// Minimal bottom padding
+y += 3;
 
-  center('We appreciate your business.', y);
-  y += 5;
-
-  center('Made with love by Cakes by Aspeya', y);
-  y += 7;
-
-  // Add a small white margin at the bottom of the receipt.
-  // The custom page height leaves enough space for normal orders.
-
-  return doc;
+return doc;
 }
