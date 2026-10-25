@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { createAdminClient } from '@/lib/supabase/admin'; // 👈 Use Admin client to bypass RLS
+import { ReviewForm } from '@/components/track/ReviewForm';
 
 const STEPS = ['New', 'Confirmed', 'Baking', 'Out for delivery', 'Delivered'] as const;
 const MAP: Record<string, number> = {
@@ -60,6 +61,21 @@ export default async function TrackPage({ params }: { params: Promise<{ ref: str
 
       <div className="rounded-2xl bg-cream-card p-6 ring-1 ring-black/5">
         <h2 className="font-display text-lg border-b border-olive/20 pb-2 mb-3">Your Items</h2>
+                {order.status === 'delivered' && (
+          <div className="mt-6 border-t border-olive/20 pt-6 space-y-4">
+            <h3 className="font-display text-lg text-ink">Rate your order</h3>
+            {order.order_items.map((item: any) => (
+              <div key={item.id} className="border border-olive/10 rounded-xl p-4 bg-white/50">
+                <p className="text-sm font-medium text-ink mb-1">{item.product_name}</p>
+                <ReviewForm 
+                  reference={order.reference} 
+                  productId={item.product_id} 
+                  productName={item.product_name} 
+                />
+              </div>
+            ))}
+          </div>
+        )}
         <ul className="space-y-3">
           {order.order_items.map((it: any) => (
             <li key={it.id} className="flex gap-3 text-sm">

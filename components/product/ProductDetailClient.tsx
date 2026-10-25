@@ -9,7 +9,7 @@ import { createClient } from '@/lib/supabase/client'; // 👈 Import Supabase
 
 const PKR = (n: number) => '৳' + n.toLocaleString('en-BD');
 
-export function ProductDetailClient({ product, relatedProducts = [] }: { product: any, relatedProducts?: ProductCardData[] }) {
+export function ProductDetailClient({ product, relatedProducts = [], reviews = [] }: { product: any, relatedProducts?: ProductCardData[], reviews?: any[] }) {
   const router = useRouter();
   const { add } = useCart();
   const sb = createClient();
@@ -244,6 +244,26 @@ export function ProductDetailClient({ product, relatedProducts = [] }: { product
         <div className="mt-20 pt-10 border-t border-olive/20">
           <div className="mb-8">
             <h2 className="font-display text-2xl md:text-3xl text-ink">You Might Also Like</h2>
+                  {/* 👇 PRODUCT REVIEWS SECTION 👇 */}
+      {reviews.length > 0 && (
+        <div className="mt-20 pt-10 border-t border-olive/20">
+          <h2 className="font-display text-2xl md:text-3xl text-ink mb-6">Customer Reviews</h2>
+          <div className="grid gap-4 md:grid-cols-2">
+            {reviews.map((rev: any) => (
+              <div key={rev.id} className="rounded-2xl bg-white/60 p-5 ring-1 ring-black/5">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-medium text-ink">{rev.customer_name}</span>
+                  <span className="text-yellow-500 text-lg">
+                    {'★'.repeat(rev.rating)}{'☆'.repeat(5 - rev.rating)}
+                  </span>
+                </div>
+                {rev.comment && <p className="text-sm text-olive-dark italic">"{rev.comment}"</p>}
+                <p className="text-xs text-olive-dark/60 mt-3">{new Date(rev.created_at).toLocaleDateString()}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
           </div>
           <div className="grid grid-cols-2 gap-4 md:gap-6 lg:grid-cols-3 xl:grid-cols-4">
             {relatedProducts.map((p) => <ProductCard key={p.slug} product={p} />)}

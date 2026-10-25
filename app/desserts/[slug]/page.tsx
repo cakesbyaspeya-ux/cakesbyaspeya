@@ -52,6 +52,12 @@ export default async function DessertDetailPage({ params }: { params: Promise<{ 
   const variants = (product.product_variants ?? []).sort((a: any, b: any) => a.sort_order - b.sort_order);
   const flavours = (product.product_flavours ?? []).map((pf: any) => pf.flavours).filter(Boolean);
 
+    const { data: reviews } = await sb
+    .from('reviews')
+    .select('*')
+    .eq('product_id', product.id)
+    .order('created_at', { ascending: false });
+
   return (
     <ProductDetailClient
       product={{
