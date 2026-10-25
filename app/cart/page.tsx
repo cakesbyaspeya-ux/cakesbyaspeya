@@ -39,8 +39,8 @@ export default function CartPage() {
             <Link href="/cakes" className="text-sm text-burgundy hover:underline font-medium md:hidden">
               + Add more items
             </Link>
-            <Link 
-              href="/checkout" 
+             <Link 
+              href="/checkout/info" // 👈 Changed from /checkout
               className="w-full sm:w-auto text-center rounded-full bg-burgundy px-8 py-3.5 text-cream font-medium shadow hover:bg-burgundy-dark transition"
             >
               Proceed to Checkout →
