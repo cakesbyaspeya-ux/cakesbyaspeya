@@ -19,7 +19,7 @@ export function ProductDetailClient({
   reviews?: any[] 
 }) {
   const router = useRouter();
-  const { add, clear } = useCart(); // 👈 Added 'clear' here
+  const { add, clear } = useCart();
   const sb = createClient();
 
   const [sizeId, setSizeId] = useState<string | null>(
@@ -36,7 +36,7 @@ export function ProductDetailClient({
   const [customDesignUrl, setCustomDesignUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
-  // 👇 FIX 1: Reset the "Added" button if the user changes any selection
+  // Reset the "Added" button if the user changes any selection
   useEffect(() => {
     setAdded(false);
   }, [sizeId, variantId, flavourId, cakeMessage, qty, activeImageIndex, customDesignUrl]);
@@ -65,7 +65,6 @@ export function ProductDetailClient({
     return price;
   }, [selectedSize, selectedVariant, selectedFlavour, product.base_price]);
 
-  // Centralized payload so we don't repeat ourselves
   const itemPayload = useMemo(() => ({
     product_id: product.id,
     product_slug: product.slug,
@@ -84,17 +83,16 @@ export function ProductDetailClient({
 
   function handleAdd() {
     add(itemPayload);
-    setAdded(true); // Sets the button to "✓ Added to Order"
+    setAdded(true);
   }
 
-  // 👇 FIX 2: Clear cart before adding, so "Buy Now" only buys this cake
+  // 👇 FIXED: Buy Now goes to /checkout/info and clears old cart items
   function handleBuyNow() {
     clear(); 
     add(itemPayload);
-    router.push('/checkout');
+    router.push('/checkout/info');
   }
 
-  // Handle File Upload to Supabase Storage
   async function handleDesignUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -136,6 +134,7 @@ export function ProductDetailClient({
             <div className="grid grid-cols-4 gap-2">
               {product.images.map((img: any, i: number) => (
                 <button
+                  type="button"
                   key={img.id}
                   onClick={() => setActiveImageIndex(i)}
                   className={`aspect-square overflow-hidden rounded-lg bg-cream-dark ring-2 transition-all ${
@@ -167,7 +166,7 @@ export function ProductDetailClient({
               <label className="block text-sm font-medium mb-2 text-ink">Size / weight</label>
               <div className="flex flex-wrap gap-2">
                 {product.sizes.map((s: any) => (
-                  <button key={s.id} onClick={() => setSizeId(s.id)} className={`rounded-full border px-4 py-2 text-sm transition ${sizeId === s.id ? 'border-burgundy bg-burgundy text-cream' : 'border-olive/30 text-olive-dark'}`}>
+                  <button type="button" key={s.id} onClick={() => setSizeId(s.id)} className={`rounded-full border px-4 py-2 text-sm transition ${sizeId === s.id ? 'border-burgundy bg-burgundy text-cream' : 'border-olive/30 text-olive-dark'}`}>
                     {s.label} · {PKR(s.price)}
                   </button>
                 ))}
@@ -180,7 +179,7 @@ export function ProductDetailClient({
               <label className="block text-sm font-medium mb-2 text-ink">Type</label>
               <div className="flex flex-wrap gap-2">
                 {product.variants.map((v: any) => (
-                  <button key={v.id} onClick={() => setVariantId(v.id)} className={`rounded-full border px-4 py-2 text-sm transition ${variantId === v.id ? 'border-burgundy bg-burgundy text-cream' : 'border-olive/30 text-olive-dark'}`}>
+                  <button type="button" key={v.id} onClick={() => setVariantId(v.id)} className={`rounded-full border px-4 py-2 text-sm transition ${variantId === v.id ? 'border-burgundy bg-burgundy text-cream' : 'border-olive/30 text-olive-dark'}`}>
                     {v.name}
                   </button>
                 ))}
@@ -206,10 +205,12 @@ export function ProductDetailClient({
               <input type="text" maxLength={30} value={cakeMessage} onChange={(e) => setCakeMessage(e.target.value)} placeholder="Happy Birthday, Sarah!" className="w-full rounded-lg border border-olive/30 bg-cream-card px-4 py-2.5 outline-none focus:border-burgundy" />
               
               {selectedImageObj && (
-                <div className="mt-3 relative aspect-[3/1] overflow-hidden rounded-xl">
-                  <img src={selectedImageObj.url} alt="" className="h-full w-full object-cover opacity-60" />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="font-handwriting text-4xl text-cream drop-shadow-lg text-center px-4">{cakeMessage || 'Your message appears here'}</span>
+                <div className="mt-3 relative aspect-[3/1] overflow-hidden rounded-xl bg-cream-dark">
+                  <img src={selectedImageObj.url} alt="" className="h-full w-full object-cover opacity-80" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-black/40 flex items-center justify-center">
+                    <span className="font-handwriting text-4xl text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] text-center px-4">
+                      {cakeMessage || 'Your message appears here'}
+                    </span>
                   </div>
                 </div>
               )}
@@ -225,7 +226,7 @@ export function ProductDetailClient({
             {customDesignUrl ? (
               <div className="relative aspect-[4/3] w-full max-w-[200px] overflow-hidden rounded-xl ring-1 ring-burgundy/20">
                 <img src={customDesignUrl} alt="Custom design" className="h-full w-full object-cover" />
-                <button onClick={() => setCustomDesignUrl(null)} className="absolute top-2 right-2 rounded-full bg-burgundy px-2 py-1 text-xs text-cream hover:bg-burgundy-dark">Remove</button>
+                <button type="button" onClick={() => setCustomDesignUrl(null)} className="absolute top-2 right-2 rounded-full bg-burgundy px-2 py-1 text-xs text-cream hover:bg-burgundy-dark">Remove</button>
               </div>
             ) : (
               <label className="flex h-24 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-olive/30 bg-cream-card hover:bg-cream-dark/30 transition">
@@ -238,20 +239,19 @@ export function ProductDetailClient({
           {/* DESKTOP ADD TO CART */}
           <div className="mt-8 hidden md:flex items-center gap-4">
             <div className="flex items-center rounded-full border border-olive/30 bg-cream-card">
-              <button onClick={() => setQty(q => Math.max(1, q - 1))} className="px-4 py-2 text-olive-dark hover:text-burgundy">−</button>
+              <button type="button" onClick={() => setQty(q => Math.max(1, q - 1))} className="px-4 py-2 text-olive-dark hover:text-burgundy">−</button>
               <span className="w-6 text-center text-sm font-medium">{qty}</span>
-              <button onClick={() => setQty(q => q + 1)} className="px-4 py-2 text-olive-dark hover:text-burgundy">+</button>
+              <button type="button" onClick={() => setQty(q => q + 1)} className="px-4 py-2 text-olive-dark hover:text-burgundy">+</button>
             </div>
             
-            {/* 👇 Button stays green if added, resets to burgundy if changed */}
-            <button onClick={handleAdd} className={`flex-1 rounded-full px-6 py-3.5 text-cream font-medium shadow transition-colors ${
+            <button type="button" onClick={handleAdd} className={`flex-1 rounded-full px-6 py-3.5 text-cream font-medium shadow transition-colors ${
               added ? 'bg-olive' : 'bg-burgundy hover:bg-burgundy-dark'
             }`}>
               {added ? '✓ Added to Order' : `Add to Order · ${PKR(unitPrice * qty)}`}
             </button>
           </div>
           
-          <button onClick={handleBuyNow} className="mt-3 w-full hidden md:block rounded-full border border-olive px-6 py-3.5 text-olive-dark font-medium hover:bg-olive hover:text-cream transition">
+          <button type="button" onClick={handleBuyNow} className="mt-3 w-full hidden md:block rounded-full border border-olive px-6 py-3.5 text-olive-dark font-medium hover:bg-olive hover:text-cream transition">
             Buy Now
           </button>
 
@@ -301,11 +301,11 @@ export function ProductDetailClient({
       <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-olive/20 bg-cream/95 p-3 px-4 backdrop-blur-md md:hidden shadow-[0_-10px_20px_-10px_rgba(0,0,0,0.1)]">
         <div className="flex items-center justify-between gap-4 max-w-lg mx-auto pr-14">
           <div className="flex items-center rounded-full border border-olive/30 bg-white">
-            <button onClick={() => setQty(q => Math.max(1, q - 1))} className="px-3 py-1.5 text-olive-dark">−</button>
+            <button type="button" onClick={() => setQty(q => Math.max(1, q - 1))} className="px-3 py-1.5 text-olive-dark">−</button>
             <span className="w-5 text-center text-sm font-medium">{qty}</span>
-            <button onClick={() => setQty(q => q + 1)} className="px-3 py-1.5 text-olive-dark">+</button>
+            <button type="button" onClick={() => setQty(q => q + 1)} className="px-3 py-1.5 text-olive-dark">+</button>
           </div>
-          <button onClick={handleAdd} className={`flex-1 rounded-full px-4 py-3 text-sm text-cream font-medium shadow transition-colors ${
+          <button type="button" onClick={handleAdd} className={`flex-1 rounded-full px-4 py-3 text-sm text-cream font-medium shadow transition-colors ${
             added ? 'bg-olive' : 'bg-burgundy hover:bg-burgundy-dark'
           }`}>
             {added ? '✓ Added' : `Add · ${PKR(unitPrice * qty)}`}
