@@ -1,59 +1,171 @@
+
 @import "tailwindcss";
 
-/* Force light mode on all devices (fixes iPhone black screen) */
+/* Force light mode on all devices */
 :root {
   color-scheme: light;
 }
 
+/* ─────────────────────────────────────────
+   THEME — Cakes by Aspeya
+───────────────────────────────────────── */
 @theme {
-  /* ── Olive Green (primary) ── */
-  --color-olive:         #5C6B3F;
-  --color-olive-dark:    #414D2C;
-  --color-olive-light:   #7C8B5E;
+  /* Olive Green */
+  --color-olive: #5C6B3F;
+  --color-olive-dark: #414D2C;
+  --color-olive-light: #7C8B5E;
 
-  /* ── Burgundy (accent) ── */
-  --color-burgundy:       #6E1F2E;
-  --color-burgundy-dark:  #4E1420;
+  /* Burgundy */
+  --color-burgundy: #6E1F2E;
+  --color-burgundy-dark: #4E1420;
   --color-burgundy-light: #8F2E40;
 
-  /* ── Cream (background) ── */
-  --color-cream:       #FAF3E3;
-  --color-cream-dark:  #F0E4CC;
-  --color-cream-card:  #FFFDF7;
+  /* Cream */
+  --color-cream: #FAF3E3;
+  --color-cream-dark: #F0E4CC;
+  --color-cream-card: #FFFDF7;
 
-  /* ── Neutrals ── */
-  --color-ink:       #2A2A24;
-  --color-whatsapp:  #25D366;
+  /* Neutrals */
+  --color-ink: #2A2A24;
+  --color-whatsapp: #25D366;
 
-  /* ── Fonts ── */
+  /* Fonts */
   --font-display: var(--font-playfair), 'Playfair Display', serif;
-  --font-body:    var(--font-inter), 'Inter', sans-serif;
+  --font-body: var(--font-inter), 'Inter', sans-serif;
   --font-handwriting: var(--font-caveat), 'Caveat', cursive;
 }
 
-/* Base styles */
-html, body {
+/* ─────────────────────────────────────────
+   BASE STYLES
+───────────────────────────────────────── */
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 5rem;
+  min-height: 100%;
+}
+
+body {
+  min-height: 100vh;
   background-color: var(--color-cream);
-  background-image: radial-gradient(at 0% 0%, rgba(250, 243, 227, 1) 0, transparent 50%), 
-                    radial-gradient(at 100% 100%, rgba(240, 228, 204, 0.5) 0, transparent 50%);
+  background-image:
+    radial-gradient(
+      at 0% 0%,
+      rgba(250, 243, 227, 1) 0,
+      transparent 50%
+    ),
+    radial-gradient(
+      at 100% 100%,
+      rgba(240, 228, 204, 0.5) 0,
+      transparent 50%
+    );
   color: var(--color-ink);
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  min-height: 100%;
 }
 
-/* Reusable form input */
+/* Prevent images from overflowing their containers */
+img {
+  max-width: 100%;
+}
+
+/* Consistent link behavior */
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Better keyboard accessibility */
+:focus-visible {
+  outline: 2px solid var(--color-burgundy);
+  outline-offset: 4px;
+}
+
+/* ─────────────────────────────────────────
+   ANIMATIONS
+───────────────────────────────────────── */
+
+/* Hero content entrance */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Gentle floating decoration */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Soft pulsing accent */
+@keyframes softPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.55;
+  }
+}
+
+/* Reusable animation utilities */
+.animate-fade-in-up {
+  animation: fadeInUp 0.7s ease-out both;
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+.animate-soft-pulse {
+  animation: softPulse 2s ease-in-out infinite;
+}
+
+/* ─────────────────────────────────────────
+   REUSABLE FORM INPUT
+───────────────────────────────────────── */
 .input {
   width: 100%;
+  border: 1px solid
+    color-mix(in srgb, var(--color-olive) 30%, transparent);
   border-radius: 0.5rem;
-  border: 1px solid color-mix(in srgb, var(--color-olive) 30%, transparent);
   background-color: var(--color-cream-card);
   padding: 0.625rem 1rem;
   outline: none;
-  transition: border-color 150ms ease;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
 }
 
 .input:focus {
   border-color: var(--color-burgundy);
+  box-shadow: 0 0 0 3px
+    color-mix(in srgb, var(--color-burgundy) 12%, transparent);
+}
+
+/* ─────────────────────────────────────────
+   REDUCED MOTION ACCESSIBILITY
+───────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
