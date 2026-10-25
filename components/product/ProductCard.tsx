@@ -1,4 +1,3 @@
-
 import Link from 'next/link';
 import { ImageSlideshow } from './ImageSlideshow';
 
@@ -8,32 +7,22 @@ export type ProductCardData = {
   product_type: 'cake' | 'dessert';
   image_layout: 'slideshow' | 'static';
   images: string[];
-  from_price: number; // 0 means "custom pricing"
+  from_price: number;
 };
 
 const PKR = (n: number) => '৳' + n.toLocaleString('en-BD');
 
-export function ProductCard({
-  product,
-}: {
-  product: ProductCardData;
-}) {
+export function ProductCard({ product }: { product: ProductCardData }) {
   const href = `/${product.product_type === 'cake' ? 'cakes' : 'desserts'}/${product.slug}`;
 
   return (
-    <Link
-      href={href}
-      className="group block transition-transform duration-300 hover:-translate-y-1.5"
-    >
+    <Link href={href} className="group block transition-transform duration-300 hover:-translate-y-1.5">
       <div className="overflow-hidden rounded-2xl bg-white/60 backdrop-blur-md shadow-sm ring-1 ring-black/5 transition-shadow group-hover:shadow-xl">
         <div className="overflow-hidden rounded-t-2xl">
-          <ImageSlideshow
-            images={product.images}
-            alt={product.name}
-          />
+          <ImageSlideshow images={product.images} alt={product.name} />
         </div>
 
-        <div className="bg-white/40 p-4">
+        <div className="p-4 bg-white/40">
           <h3 className="font-display text-lg leading-tight text-ink">
             {product.name}
           </h3>
@@ -44,11 +33,8 @@ export function ProductCard({
                 ? `From ${PKR(product.from_price)}`
                 : 'Custom pricing'}
             </span>
-
             <span className="rounded-full bg-burgundy/10 px-2 py-0.5 text-xs font-medium text-burgundy">
-              {product.product_type === 'cake'
-                ? 'Customisable'
-                : 'Dessert'}
+              {product.product_type === 'cake' ? 'Customisable' : 'Dessert'}
             </span>
           </div>
         </div>

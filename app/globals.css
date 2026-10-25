@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* Force light mode on all devices (fixes iPhone black screen) */
+:root {
+  color-scheme: light;
+}
+
 @theme {
   /* ── Olive Green (primary) ── */
   --color-olive:         #5C6B3F;
@@ -20,14 +25,14 @@
   --color-ink:       #2A2A24;
   --color-whatsapp:  #25D366;
 
-  /* ── Fonts (populated by next/font in Phase 2.2) ── */
+  /* ── Fonts ── */
   --font-display: var(--font-playfair), 'Playfair Display', serif;
   --font-body:    var(--font-inter), 'Inter', sans-serif;
   --font-handwriting: var(--font-caveat), 'Caveat', cursive;
 }
 
 /* Base styles */
-body {
+html, body {
   background-color: var(--color-cream);
   background-image: radial-gradient(at 0% 0%, rgba(250, 243, 227, 1) 0, transparent 50%), 
                     radial-gradient(at 100% 100%, rgba(240, 228, 204, 0.5) 0, transparent 50%);
@@ -35,13 +40,13 @@ body {
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  min-height: 100%;
 }
 
 /* Reusable form input */
 .input {
   width: 100%;
   border-radius: 0.5rem;
-  border: 1px solid var(--color-olive); /* fallback */
   border: 1px solid color-mix(in srgb, var(--color-olive) 30%, transparent);
   background-color: var(--color-cream-card);
   padding: 0.625rem 1rem;

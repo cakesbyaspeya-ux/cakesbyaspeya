@@ -1,12 +1,11 @@
 import type { Metadata } from 'next';
-import { Playfair_Display, Inter } from 'next/font/google';
+import { Playfair_Display, Inter, Caveat } from 'next/font/google';
 import './globals.css';
 import { CartProvider } from '@/components/cart/CartProvider';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { FloatingWhatsAppButton } from '@/components/layout/FloatingWhatsAppButton';
 import { NoticeBanner } from '@/components/layout/NoticeBanner';
-import { Playfair_Display, Inter, Caveat } from 'next/font/google';
 
 // ── Fonts ────────────────────────────────────────────────
 const playfair = Playfair_Display({
@@ -31,7 +30,7 @@ const caveat = Caveat({
 // ── Metadata ─────────────────────────────────────────────
 export const metadata: Metadata = {
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL ?? 'https://cakesbyaspeya.com'
+    process.env.NEXT_PUBLIC_SITE_URL ?? 'https://cakesbyaspeya.vercel.app'
   ),
   title: {
     default: 'Cakes by Aspeya | Custom Cakes & Desserts in Chittagong',
@@ -49,7 +48,7 @@ export const metadata: Metadata = {
     'desserts Chittagong',
     'cake delivery Chittagong',
   ],
-  manifest: '/manifest.json', // 👈 Added for PWA
+  manifest: '/manifest.json',
   openGraph: {
     type: 'website',
     siteName: 'Cakes by Aspeya',
@@ -71,12 +70,14 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${playfair.variable} ${inter.variable} ${caveat.variable}`}>
+    <html 
+      lang="en" 
+      className={`${playfair.variable} ${inter.variable} ${caveat.variable} bg-cream`}
+      style={{ colorScheme: 'light' }}
+    >
       <body className="bg-cream text-ink font-body antialiased">
         <CartProvider>
-          {/* 👈 Notice Banner added here */}
           <NoticeBanner />
-          
           <Navbar />
           <main className="min-h-[calc(100vh-200px)]">{children}</main>
           <Footer />

@@ -11,7 +11,6 @@ export function ProductDetailClient({ product }: { product: any }) {
   const router = useRouter();
   const { add } = useCart();
 
-  // --- State ---
   const [sizeId, setSizeId] = useState<string | null>(
     product.sizes.find((s: any) => s.is_default)?.id ?? product.sizes[0]?.id ?? null
   );
@@ -19,20 +18,14 @@ export function ProductDetailClient({ product }: { product: any }) {
   const [flavourId, setFlavourId] = useState<string | null>(product.flavours[0]?.id ?? null);
   const [cakeMessage, setCakeMessage] = useState('');
   const [qty, setQty] = useState(1);
-  
-  // NEW: Track exactly which image design is selected
   const [activeImageIndex, setActiveImageIndex] = useState(0); 
   const [added, setAdded] = useState(false);
 
-  // --- Derived Data ---
   const selectedSize = product.sizes.find((s: any) => s.id === sizeId);
   const selectedVariant = product.variants.find((v: any) => v.id === variantId);
   const selectedFlavour = product.flavours.find((f: any) => f.id === flavourId);
-  
-  // Get the exact image object the user is looking at
   const selectedImageObj = product.images[activeImageIndex] || product.images[0];
 
-  // Live price calculation
   const unitPrice = useMemo(() => {
     let price = selectedSize?.price ?? product.base_price ?? 0;
     if (selectedVariant?.price_delta) price += selectedVariant.price_delta;
@@ -40,15 +33,14 @@ export function ProductDetailClient({ product }: { product: any }) {
     return price;
   }, [selectedSize, selectedVariant, selectedFlavour, product.base_price]);
 
-   function handleAdd() {
+  function handleAdd() {
     add({
       product_id: product.id,
       product_slug: product.slug,
       product_name: product.name,
       image: selectedImageObj?.url || '',
-      design_id: selectedImageObj?.id || null,       // <-- Saves the exact image UUID
-      design_label: selectedImageObj?.label || null, // <-- Saves "Design 2"
-      
+      design_id: selectedImageObj?.id || null,
+      design_label: selectedImageObj?.label || null,
       variant: selectedVariant?.name ?? null,
       flavour: selectedFlavour?.name ?? null,
       size_label: selectedSize?.label ?? null,
@@ -56,7 +48,7 @@ export function ProductDetailClient({ product }: { product: any }) {
       unit_price: unitPrice,
       qty,
     });
-    // ...
+
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
   }
@@ -67,7 +59,6 @@ export function ProductDetailClient({ product }: { product: any }) {
         
         {/* LEFT: Image Gallery & Thumbnails */}
         <div className="space-y-4">
-          {/* Main Slideshow (Synced with activeImageIndex) */}
           <ImageSlideshow 
             images={product.images.map((img: any) => img.url)} 
             alt={product.name} 
@@ -75,7 +66,6 @@ export function ProductDetailClient({ product }: { product: any }) {
             onIndexChange={setActiveImageIndex}
           />
           
-          {/* Clickable Thumbnails */}
           {product.images.length > 1 && (
             <div className="grid grid-cols-4 gap-2">
               {product.images.map((img: any, i: number) => (
@@ -100,7 +90,6 @@ export function ProductDetailClient({ product }: { product: any }) {
         <div>
           <h1 className="font-display text-3xl md:text-4xl text-ink">{product.name}</h1>
           
-          {/* Display the active design label if there are multiple images */}
           {product.images.length > 1 && selectedImageObj?.label && (
             <p className="mt-1 text-sm font-medium text-burgundy">
               Selected: {selectedImageObj.label}
@@ -111,7 +100,6 @@ export function ProductDetailClient({ product }: { product: any }) {
 
           <div className="mt-6 text-3xl font-display text-burgundy">{PKR(unitPrice)}</div>
 
-          {/* Sizes */}
           {product.allows_size && product.sizes.length > 0 && (
             <div className="mt-6">
               <label className="block text-sm font-medium mb-2 text-ink">Size / weight</label>
@@ -133,7 +121,6 @@ export function ProductDetailClient({ product }: { product: any }) {
             </div>
           )}
 
-          {/* Variants */}
           {product.variants.length > 0 && (
             <div className="mt-5">
               <label className="block text-sm font-medium mb-2 text-ink">Type</label>
@@ -155,7 +142,6 @@ export function ProductDetailClient({ product }: { product: any }) {
             </div>
           )}
 
-          {/* Flavours */}
           {product.allows_flavour && product.flavours.length > 0 && (
             <div className="mt-5">
               <label className="block text-sm font-medium mb-2 text-ink">Flavour</label>
@@ -173,7 +159,6 @@ export function ProductDetailClient({ product }: { product: any }) {
             </div>
           )}
 
-          {/* Cake Message & Live Preview */}
           {product.allows_cake_message && (
             <div className="mt-5">
               <label className="block text-sm font-medium mb-2 text-ink">
@@ -192,6 +177,7 @@ export function ProductDetailClient({ product }: { product: any }) {
                 <div className="mt-3 relative aspect-[3/1] overflow-hidden rounded-xl">
                   <img src={selectedImageObj.url} alt="" className="h-full w-full object-cover opacity-60" />
                   <div className="absolute inset-0 flex items-center justify-center">
+                    {/* 👇 Changed to font-handwriting */}
                     <span className="font-handwriting text-4xl text-cream drop-shadow-lg text-center px-4">
                       {cakeMessage || 'Your message appears here'}
                     </span>
@@ -201,7 +187,6 @@ export function ProductDetailClient({ product }: { product: any }) {
             </div>
           )}
 
-          {/* Quantity & Add to Cart */}
           <div className="mt-8 flex items-center gap-4">
             <div className="flex items-center rounded-full border border-olive/30 bg-cream-card">
               <button onClick={() => setQty(q => Math.max(1, q - 1))} className="px-4 py-2 text-olive-dark hover:text-burgundy">−</button>
