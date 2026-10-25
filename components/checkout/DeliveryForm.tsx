@@ -34,36 +34,51 @@ export function DeliveryForm({ onBack }: { onBack: () => void }) {
     }
 
     setLocating(true);
+    
+    // Add a timeout so it doesn't hang forever if the browser ignores it
+    const timeoutId = setTimeout(() => {
+      if (locating) {
+        setLocating(false);
+        alert('Location request timed out. Please check your browser permissions or type your address manually.');
+      }
+    }, 15000);
+
     navigator.geolocation.getCurrentPosition(
       async (position) => {
+        clearTimeout(timeoutId);
         const { latitude, longitude } = position.coords;
+        
         try {
-          // Call our backend geocode API to avoid exposing the key
+          console.log("Coordinates found:", latitude, longitude);
+          
           const res = await fetch('/api/geocode', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ lat: latitude, lng: longitude }),
           });
+          
           const data = await res.json();
+          console.log("Geocode API response:", data);
           
           if (res.ok && data.address) {
             setAddress(data.address);
-            
-            // Try to auto-detect the Chittagong area from the address string
             const detectedArea = AREAS.find(a => data.address.includes(a));
             if (detectedArea) setArea(detectedArea);
           } else {
-            alert('Could not get address from your location.');
+            alert(`Error from Google API: ${data.error || 'Could not find address'}`);
           }
         } catch (err) {
-          alert('Failed to fetch address.');
+          console.error("Fetch error:", err);
+          alert('Failed to connect to the server to get address.');
         } finally {
           setLocating(false);
         }
       },
       (err) => {
-        alert('Please allow location access in your browser settings.');
+        clearTimeout(timeoutId);
         setLocating(false);
+        console.error("Geolocation error:", err);
+        alert(`Location Error: ${err.message}. Please allow location access in your browser settings.`);
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
