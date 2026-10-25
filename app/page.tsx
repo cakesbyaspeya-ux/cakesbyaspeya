@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { getProducts } from '@/lib/products';
 import { ProductCard } from '@/components/product/ProductCard';
 import { TrackOrderWidget } from '@/components/home/TrackOrderWidget';
+import { RecentlyViewed } from '@/components/product/RecentlyViewed';
 
 export default async function HomePage() {
   const [cakes, desserts] = await Promise.all([
@@ -151,6 +152,10 @@ export default async function HomePage() {
           </Link>
         </div>
       </section>
+
+  {/* 👈 ADD RECENTLY VIEWED HERE */}
+   <RecentlyViewed />
+
 
       {/* ── CURVED DIVIDER (TOP) ── */}
       <div className="relative h-12 md:h-24 w-full bg-cream">
