@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { useCart } from '@/components/cart/CartProvider';
 import { CartList } from '@/components/checkout/CartList';
-import { OrderSummary } from '@/components/checkout/OrderSummary';
 
 export default function CartPage() {
   const { items } = useCart();
@@ -22,38 +21,25 @@ export default function CartPage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10 md:py-16">
+    <div className="mx-auto max-w-3xl px-4 py-10 md:py-16">
       <div className="mb-8 flex items-center justify-between">
-        <h1 className="font-display text-3xl md:text-4xl text-ink">Your Order Summary</h1>
-        <Link href="/cakes" className="text-sm text-burgundy hover:underline font-medium hidden md:block">
+        <h1 className="font-display text-3xl md:text-4xl text-ink">Your Order</h1>
+        <Link href="/cakes" className="text-sm text-burgundy hover:underline font-medium">
           + Add more items
         </Link>
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-[1fr_380px]">
-        {/* Left Side: Cart Items & Upsells */}
-        <div>
-          <CartList />
-          
-          <div className="mt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
-            <Link href="/cakes" className="text-sm text-burgundy hover:underline font-medium md:hidden">
-              + Add more items
-            </Link>
-            
-            {/* 👇 This button now goes to the Customer Info page */}
-            <Link 
-              href="/checkout/info" 
-              className="w-full sm:w-auto text-center rounded-full bg-burgundy px-8 py-3.5 text-cream font-medium shadow hover:bg-burgundy-dark transition"
-            >
-              Proceed to Checkout →
-            </Link>
-          </div>
+      <div className="space-y-6">
+        <CartList />
+        
+        <div className="pt-4 flex justify-end">
+          <Link 
+            href="/checkout/info" 
+            className="w-full sm:w-auto text-center rounded-full bg-burgundy px-8 py-3.5 text-cream font-medium shadow hover:bg-burgundy-dark transition"
+          >
+            Proceed to Customer Info →
+          </Link>
         </div>
-
-        {/* Right Side: Sticky Summary (Promo Code & Totals) */}
-        <aside className="lg:sticky lg:top-24 h-fit">
-          <OrderSummary />
-        </aside>
       </div>
     </div>
   );
