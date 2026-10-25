@@ -6,6 +6,7 @@ import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { FloatingWhatsAppButton } from '@/components/layout/FloatingWhatsAppButton';
 import { NoticeBanner } from '@/components/layout/NoticeBanner';
+import { Playfair_Display, Inter, Caveat } from 'next/font/google';
 
 // ── Fonts ────────────────────────────────────────────────
 const playfair = Playfair_Display({
@@ -18,6 +19,12 @@ const playfair = Playfair_Display({
 const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
+  display: 'swap',
+});
+
+const caveat = Caveat({
+  subsets: ['latin'],
+  variable: '--font-caveat',
   display: 'swap',
 });
 
@@ -64,7 +71,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${playfair.variable} ${inter.variable}`}>
+    <html lang="en" className={`${playfair.variable} ${inter.variable} ${caveat.variable}`}>
       <body className="bg-cream text-ink font-body antialiased">
         <CartProvider>
           {/* 👈 Notice Banner added here */}

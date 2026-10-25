@@ -23,11 +23,14 @@
   /* ── Fonts (populated by next/font in Phase 2.2) ── */
   --font-display: var(--font-playfair), 'Playfair Display', serif;
   --font-body:    var(--font-inter), 'Inter', sans-serif;
+  --font-handwriting: var(--font-caveat), 'Caveat', cursive;
 }
 
 /* Base styles */
 body {
   background-color: var(--color-cream);
+  background-image: radial-gradient(at 0% 0%, rgba(250, 243, 227, 1) 0, transparent 50%), 
+                    radial-gradient(at 100% 100%, rgba(240, 228, 204, 0.5) 0, transparent 50%);
   color: var(--color-ink);
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;

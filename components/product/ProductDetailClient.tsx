@@ -192,7 +192,7 @@ export function ProductDetailClient({ product }: { product: any }) {
                 <div className="mt-3 relative aspect-[3/1] overflow-hidden rounded-xl">
                   <img src={selectedImageObj.url} alt="" className="h-full w-full object-cover opacity-60" />
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="font-display text-2xl text-cream drop-shadow-lg text-center px-4 italic">
+                    <span className="font-handwriting text-4xl text-cream drop-shadow-lg text-center px-4">
                       {cakeMessage || 'Your message appears here'}
                     </span>
                   </div>
