@@ -12,7 +12,7 @@ export async function POST(req: Request) {
     const subtotal = body.items.reduce((sum: number, item: any) => sum + (item.unit_price * item.qty), 0) 
                    + (body.upsells || []).reduce((sum: number, u: any) => sum + (u.price * u.qty), 0);
 
-    // 1. Save order
+        // 1. Save order
     const { data: order, error: orderError } = await sb
       .from('orders')
       .insert({
@@ -26,7 +26,9 @@ export async function POST(req: Request) {
         area: body.delivery_method === 'delivery' ? body.area : null,
         address: body.delivery_method === 'delivery' ? body.address : null,
         special_instructions: body.special_instructions || null,
-        subtotal,
+        subtotal: body.final_total, // Save the discounted total
+        promo_code: body.promo_code || null,
+        discount_amount: body.discount_amount || 0,
         status: 'new'
       })
       .select('id')
@@ -103,7 +105,7 @@ ${body.upsells?.length ? `\n✨ *Extras:*\n${body.upsells.map((u:any) => `- ${u.
         items: orderItems,
         upsells: body.upsells || []
       },
-      'Sanmar Ocean City / 2 No Gate / Women College Mor, Chittagong'
+      'Sanmar Ocean City / 2 No Gate / Women College Circle, Chittagong'
     );
 
     const waUrl = whatsappUrl(message);

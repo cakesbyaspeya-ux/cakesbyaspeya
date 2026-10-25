@@ -6,7 +6,7 @@ import { useCart } from '@/components/cart/CartProvider';
 
 export function DeliveryForm({ onBack }: { onBack: () => void }) {
   const router = useRouter();
-  const { items, upsells, clear } = useCart(); // <-- Added upsells here
+  const { items, upsells, promoCode, discountAmount, total, clear } = useCart();
   const [method, setMethod] = useState<'delivery' | 'pickup'>('delivery');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -38,6 +38,9 @@ export function DeliveryForm({ onBack }: { onBack: () => void }) {
       area: method === 'delivery' ? data.area : null,
       address: method === 'delivery' ? data.address : null,
       special_instructions: data.instructions,
+      promo_code: promoCode,
+      discount_amount: discountAmount,
+      final_total: total, // Add this so the backend knows the exact total
       items: items.map(it => ({
         product_id: it.product_id,
         product_name: it.product_name,
@@ -49,6 +52,8 @@ export function DeliveryForm({ onBack }: { onBack: () => void }) {
         cake_message: it.cake_message,
         unit_price: it.unit_price,
         qty: it.qty,
+
+        
       })),
       // Add upsells to payload
       upsells: upsells.map(u => ({
@@ -57,6 +62,7 @@ export function DeliveryForm({ onBack }: { onBack: () => void }) {
         price: u.price,
         qty: u.qty
       }))
+      
     };
 
     try {
