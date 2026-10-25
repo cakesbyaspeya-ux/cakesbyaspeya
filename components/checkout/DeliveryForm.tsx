@@ -101,7 +101,7 @@ export function DeliveryForm({ onBack }: { onBack: () => void }) {
         design_id: it.design_id,       
         design_label: it.design_label, 
         image: it.image,               
-        custom_design_url: it.custom_design_url, // 👈 Passed custom design
+        custom_design_url: it.custom_design_url, 
         flavour: it.flavour,
         size_label: it.size_label,
         cake_message: it.cake_message,
@@ -125,7 +125,8 @@ export function DeliveryForm({ onBack }: { onBack: () => void }) {
 
       sessionStorage.setItem('cba_last_order', JSON.stringify({ ref: json.reference, waUrl: json.waUrl }));
       clear();
-      window.open(json.waUrl, '_blank');
+      
+      // 🚀 NO AUTO-REDIRECT: Go straight to our new Download PDF page
       router.push(`/order-confirmed/${json.reference}`);
       
     } catch (err: any) {
@@ -251,8 +252,8 @@ export function DeliveryForm({ onBack }: { onBack: () => void }) {
       </label>
 
       <div className="flex flex-col items-end gap-2">
-        <button type="submit" disabled={loading} className="rounded-full bg-whatsapp px-8 py-3.5 font-medium text-white shadow hover:brightness-95 disabled:opacity-50 transition w-full sm:w-auto">
-          {loading ? 'Processing...' : 'Send Order via WhatsApp →'}
+        <button type="submit" disabled={loading} className="rounded-full bg-burgundy px-8 py-3.5 font-medium text-white shadow hover:bg-burgundy-dark disabled:opacity-50 transition w-full sm:w-auto">
+          {loading ? 'Placing Order...' : 'Place Order & Get Receipt →'}
         </button>
       </div>
     </form>
