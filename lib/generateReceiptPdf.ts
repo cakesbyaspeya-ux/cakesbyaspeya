@@ -3,8 +3,8 @@ import { jsPDF } from 'jspdf';
 
 type ReceiptItem = {
   product_name?: string;
-  qty?: number;
-  unit_price?: number;
+  qty?: number | string;
+  unit_price?: number | string;
   size_label?: string;
   flavour?: string;
   design_label?: string;
@@ -13,8 +13,8 @@ type ReceiptItem = {
 
 type ReceiptUpsell = {
   upsell_name?: string;
-  qty?: number;
-  unit_price?: number;
+  qty?: number | string;
+  unit_price?: number | string;
 };
 
 type ReceiptOrder = {
@@ -29,42 +29,49 @@ type ReceiptOrder = {
   address?: string;
   order_items?: ReceiptItem[];
   order_upsells?: ReceiptUpsell[];
+  subtotal?: number | string;
   discount_amount?: number | string;
   promo_code?: string;
-  subtotal?: number | string;
   delivery_charge?: number | string;
   delivery_fee?: number | string;
   total_amount?: number | string;
+  payment_method?: string;
+  payment_status?: string;
 };
 
-const COLORS = {
+const C = {
   burgundy: [110, 31, 46] as [number, number, number],
-  burgundyLight: [248, 239, 241] as [number, number, number],
   olive: [92, 107, 63] as [number, number, number],
-  cream: [250, 246, 237] as [number, number, number],
-  ink: [42, 42, 36] as [number, number, number],
-  muted: [112, 112, 105] as [number, number, number],
-  border: [231, 228, 220] as [number, number, number],
-  white: [255, 255, 255] as [number, number, number],
+  black: [20, 20, 20] as [number, number, number],
+  grey: [100, 100, 100] as [number, number, number],
 };
 
-const money = (value: number) =>
+const RECEIPT_WIDTH = 80;
+const MARGIN = 5;
+const INNER_WIDTH = RECEIPT_WIDTH - MARGIN * 2;
+
+const num = (value: unknown): number => {
+  const result = Number(value);
+  return Number.isFinite(result) ? result : 0;
+};
+
+const text = (
+  value: unknown,
+  fallback = 'N/A'
+): string => {
+  if (value == null || String(value).trim() === '') {
+    return fallback;
+  }
+
+  return String(value).trim();
+};
+
+const money = (value: number): string =>
   `Tk ${Math.round(value).toLocaleString('en-BD')}`;
 
-const numberOrZero = (value: unknown): number => {
-  const n = Number(value);
-  return Number.isFinite(n) ? n : 0;
-};
+function formatDate(value?: string): string {
+  if (!value) return 'N/A';
 
-const textOr = (value: unknown, fallback = 'Not provided') =>
-  value == null || String(value).trim() === ''
-    ? fallback
-    : String(value).trim();
-
-const dateLabel = (value?: string) => {
-  if (!value) return 'Not provided';
-
-  // Avoid timezone shifts for date-only values such as YYYY-MM-DD.
   const date = /^\d{4}-\d{2}-\d{2}$/.test(value)
     ? new Date(`${value}T12:00:00`)
     : new Date(value);
@@ -76,457 +83,439 @@ const dateLabel = (value?: string) => {
     month: 'short',
     year: 'numeric',
   });
-};
+}
+
+function formatTime(value?: string): string {
+  if (!value) return '';
+
+  // Preserve a time-only value rather than parsing it as a date.
+  return value;
+}
 
 export function generateReceiptPdf(order: ReceiptOrder) {
+  const items = order.order_items ?? [];
+  const extras = order.order_upsells ?? [];
+
+  // A custom-height receipt avoids an A4 page and gives the receipt
+  // a narrow, thermal-printer-inspired appearance.
+  const estimatedHeight =
+    190 +
+    items.reduce((sum, item) => {
+      const details = [
+        item.size_label,
+        item.flavour,
+        item.design_label,
+        item.cake_message,
+      ].filter(Boolean).length;
+
+      return sum + 16 + details * 5;
+    }, 0) +
+    extras.length * 10 +
+    (order.address ? 18 : 0);
+
   const doc = new jsPDF({
-    format: 'a4',
-    unit: 'mm',
     orientation: 'portrait',
+    unit: 'mm',
+    format: [RECEIPT_WIDTH, Math.max(220, estimatedHeight)],
     compress: true,
   });
 
-  const W = doc.internal.pageSize.getWidth();
-  const H = doc.internal.pageSize.getHeight();
-  const M = 16;
-  const R = W - M;
-  const CONTENT_W = W - M * 2;
-  const BOTTOM = H - 19;
+  const pageHeight = doc.internal.pageSize.getHeight();
+  let y = 10;
 
-  let y = 0;
+  const center = (value: string, atY: number) => {
+    doc.text(value, RECEIPT_WIDTH / 2, atY, {
+      align: 'center',
+    });
+  };
 
-  const setText = (
-    color: [number, number, number] = COLORS.ink
-  ) => doc.setTextColor(...color);
-
-  const line = (atY: number) => {
-    doc.setDrawColor(...COLORS.border);
+  const separator = () => {
+    doc.setDrawColor(...C.black);
     doc.setLineWidth(0.25);
-    doc.line(M, atY, R, atY);
+    doc.setLineDashPattern([1.1, 0.8], 0);
+    doc.line(MARGIN, y, RECEIPT_WIDTH - MARGIN, y);
+    doc.setLineDashPattern([], 0);
+    y += 5;
   };
 
-  const write = (
-    value: unknown,
-    x: number,
-    atY: number,
-    maxWidth: number,
-    options: { font?: string; size?: number; color?: [number, number, number] } = {}
+  const row = (
+    label: string,
+    value: string,
+    bold = false
   ) => {
-    const content = String(value ?? '');
-    doc.setFont('helvetica', options.font ?? 'normal');
-    doc.setFontSize(options.size ?? 9);
-    setText(options.color ?? COLORS.ink);
+    doc.setFont('courier', bold ? 'bold' : 'normal');
+    doc.setFontSize(9);
 
-    const wrapped = doc.splitTextToSize(content, maxWidth);
-    doc.text(wrapped, x, atY);
+    doc.text(label, MARGIN, y);
 
-    return wrapped.length * (options.size ?? 9) * 0.42;
+    doc.text(value, RECEIPT_WIDTH - MARGIN, y, {
+      align: 'right',
+    });
+
+    y += 6;
   };
 
-  const ensureSpace = (height: number) => {
-    if (y + height <= BOTTOM) return;
-
-    doc.addPage();
-    drawPageHeader();
-    y = 48;
-  };
-
-  function drawPageHeader() {
-    doc.setFillColor(...COLORS.burgundy);
-    doc.rect(0, 0, W, 13, 'F');
-
-    doc.setFont('helvetica', 'bold');
+  const wrapped = (
+    value: string,
+    width = INNER_WIDTH
+  ): string[] => {
+    doc.setFont('courier', 'normal');
     doc.setFontSize(8);
-    setText(COLORS.white);
-    doc.text('CAKES BY ASPEYA', M, 8.2);
+    return doc.splitTextToSize(value, width);
+  };
 
-    doc.setFont('helvetica', 'normal');
-    doc.text('ORDER RECEIPT', R, 8.2, { align: 'right' });
-  }
+  const addWrapped = (
+    value: string,
+    options?: {
+      align?: 'left' | 'center';
+      color?: [number, number, number];
+      width?: number;
+    }
+  ) => {
+    const lines = wrapped(value, options?.width ?? INNER_WIDTH);
 
-  function drawFooter(page: number, totalPages: number) {
-    doc.setDrawColor(...COLORS.border);
-    doc.line(M, H - 15, R, H - 15);
+    doc.setFont('courier', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(...(options?.color ?? C.black));
 
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7.5);
-    setText(COLORS.muted);
+    lines.forEach((line) => {
+      if (options?.align === 'center') {
+        center(line, y);
+      } else {
+        doc.text(line, MARGIN, y);
+      }
 
-    doc.text('Thank you for choosing Cakes by Aspeya!', M, H - 9);
-    doc.text(
-      `Page ${page} of ${totalPages}`,
-      R,
-      H - 9,
-      { align: 'right' }
-    );
-  }
+      y += 4;
+    });
+  };
 
-  function sectionTitle(title: string) {
-    ensureSpace(12);
+  // =================================================
+  // 1. BRANDING
+  // =================================================
 
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(10);
-    setText(COLORS.burgundy);
-    doc.text(title.toUpperCase(), M, y);
+  doc.setTextColor(...C.burgundy);
+  doc.setFont('courier', 'bold');
+  doc.setFontSize(17);
 
-    y += 4;
-    line(y);
-    y += 7;
-  }
+  center('CAKES BY ASPEYA', y);
+  y += 8;
 
-  // --------------------------------------------------
-  // 1. PREMIUM BRAND HEADER
-  // --------------------------------------------------
-
-  doc.setFillColor(...COLORS.burgundy);
-  doc.rect(0, 0, W, 45, 'F');
-
-  doc.setFillColor(...COLORS.olive);
-  doc.rect(0, 43, W, 2, 'F');
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(23);
-  setText(COLORS.white);
-  doc.text('CAKES BY ASPEYA', W / 2, 17, { align: 'center' });
-
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
-  doc.text('Handcrafted with love, made for your moments', W / 2, 24, {
-    align: 'center',
-  });
-
+  doc.setTextColor(...C.black);
+  doc.setFont('courier', 'normal');
   doc.setFontSize(8);
-  doc.text(
+
+  center('CUSTOM CAKES & DESSERTS', y);
+  y += 6;
+
+  addWrapped(
     'Sanmar Ocean City / 2 No Gate, Women College Mor, Chittagong',
-    W / 2,
-    32,
     { align: 'center' }
   );
-  doc.text('+880 1519 409555', W / 2, 38, { align: 'center' });
 
-  // Receipt reference panel
-  y = 54;
+  center('+880 1519 409555', y);
+  y += 7;
 
-  doc.setFillColor(...COLORS.cream);
-  doc.roundedRect(M, y, CONTENT_W, 20, 2, 2, 'F');
+  separator();
 
-  doc.setFont('helvetica', 'bold');
+  // =================================================
+  // 2. ORDER INFORMATION
+  // =================================================
+
+  doc.setFont('courier', 'bold');
+  doc.setFontSize(10);
+  center('ORDER RECEIPT', y);
+  y += 7;
+
+  doc.setFont('courier', 'normal');
+  doc.setFontSize(8);
+
+  row('Receipt No.', text(order.reference));
+  row('Date', formatDate(order.created_at));
+
+  separator();
+
+  // =================================================
+  // 3. CUSTOMER INFORMATION
+  // =================================================
+
+  doc.setFont('courier', 'bold');
   doc.setFontSize(9);
-  setText(COLORS.burgundy);
-  doc.text('ORDER RECEIPT', M + 5, y + 7);
+  doc.text('CUSTOMER DETAILS', MARGIN, y);
+  y += 6;
 
-  doc.setFont('helvetica', 'normal');
+  doc.setFont('courier', 'normal');
   doc.setFontSize(8);
-  setText(COLORS.muted);
-  doc.text(
-    `Reference: ${textOr(order.reference, 'N/A')}`,
-    M + 5,
-    y + 13
-  );
 
-  doc.text(
-    `Issued: ${dateLabel(order.created_at)}`,
-    R - 5,
-    y + 10,
-    { align: 'right' }
-  );
+  addWrapped(`Name: ${text(order.customer_name)}`);
+  addWrapped(`Phone: ${text(order.phone)}`);
 
-  y += 29;
+  y += 2;
+  separator();
 
-  // --------------------------------------------------
-  // 2. CUSTOMER INFORMATION
-  // --------------------------------------------------
+  // =================================================
+  // 4. DELIVERY INFORMATION
+  // =================================================
 
-  sectionTitle('Customer information');
+  doc.setFont('courier', 'bold');
+  doc.setFontSize(9);
+  doc.text('DELIVERY DETAILS', MARGIN, y);
+  y += 6;
 
-  const colGap = 10;
-  const colW = (CONTENT_W - colGap) / 2;
-  const leftX = M;
-  const rightX = M + colW + colGap;
-
-  doc.setFillColor(...COLORS.white);
-  doc.setDrawColor(...COLORS.border);
-  doc.roundedRect(leftX, y - 2, colW, 23, 2, 2, 'FD');
-  doc.roundedRect(rightX, y - 2, colW, 23, 2, 2, 'FD');
-
-  doc.setFont('helvetica', 'bold');
+  doc.setFont('courier', 'normal');
   doc.setFontSize(8);
-  setText(COLORS.muted);
-  doc.text('BILLED TO', leftX + 4, y + 4);
-  doc.text('DELIVERY DETAILS', rightX + 4, y + 4);
 
-  write(textOr(order.customer_name), leftX + 4, y + 10, colW - 8, {
-    font: 'bold',
-    size: 9,
-  });
-
-  write(textOr(order.phone), leftX + 4, y + 16, colW - 8, {
-    size: 8,
-    color: COLORS.muted,
-  });
-
-  write(
-    order.delivery_method === 'pickup' ? 'Store pickup' : 'Home delivery',
-    rightX + 4,
-    y + 10,
-    colW - 8,
-    { font: 'bold', size: 9 }
+  row(
+    'Method',
+    order.delivery_method === 'pickup' ? 'Pickup' : 'Delivery'
   );
 
-  write(
-    `${dateLabel(order.delivery_date)} · ${textOr(order.preferred_time, 'Time not set')}`,
-    rightX + 4,
-    y + 16,
-    colW - 8,
-    { size: 8, color: COLORS.muted }
+  addWrapped(
+    `Date: ${formatDate(order.delivery_date)}`
   );
 
-  y += 31;
+  const time = formatTime(order.preferred_time);
+
+  if (time) {
+    addWrapped(`Time: ${time}`);
+  }
 
   if (order.delivery_method !== 'pickup') {
-    sectionTitle('Delivery address');
+    if (order.area) {
+      addWrapped(`Area: ${order.area}`);
+    }
 
-    const addressText = [
-      order.area,
-      order.address,
-    ]
-      .filter((v) => v != null && String(v).trim() !== '')
-      .join(', ');
-
-    const addressLines = doc.splitTextToSize(
-      textOr(addressText),
-      CONTENT_W - 10
-    );
-
-    const addressHeight = Math.max(15, addressLines.length * 4 + 8);
-    ensureSpace(addressHeight + 3);
-
-    doc.setFillColor(...COLORS.cream);
-    doc.roundedRect(M, y - 3, CONTENT_W, addressHeight, 2, 2, 'F');
-
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9);
-    setText(COLORS.ink);
-    doc.text(addressLines, M + 5, y + 2);
-
-    y += addressHeight + 5;
+    if (order.address) {
+      addWrapped(`Address: ${order.address}`);
+    }
   }
 
-  // --------------------------------------------------
-  // 3. ITEMS TABLE
-  // --------------------------------------------------
+  y += 2;
+  separator();
 
-  sectionTitle('Order summary');
+  // =================================================
+  // 5. ITEMS
+  // =================================================
 
-  const qtyX = M + 4;
-  const itemX = M + 18;
-  const priceX = R - 4;
-  const descriptionW = priceX - itemX - 24;
-
-  function drawTableHeader() {
-    doc.setFillColor(...COLORS.olive);
-    doc.roundedRect(M, y - 4, CONTENT_W, 10, 1.5, 1.5, 'F');
-
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8);
-    setText(COLORS.white);
-
-    doc.text('QTY', qtyX, y + 2);
-    doc.text('ITEM DESCRIPTION', itemX, y + 2);
-    doc.text('AMOUNT', priceX, y + 2, { align: 'right' });
-
-    y += 12;
-  }
-
-  drawTableHeader();
+  doc.setFont('courier', 'bold');
+  doc.setFontSize(9);
+  doc.text('ORDER ITEMS', MARGIN, y);
+  y += 6;
 
   const drawItem = (
     name: string,
     qty: number,
     unitPrice: number,
     details: string[] = [],
-    message?: string
+    cakeMessage?: string
   ) => {
-    const safeQty = Number.isFinite(qty) ? qty : 0;
-    const amount = unitPrice * safeQty;
-    const nameLines = doc.splitTextToSize(name, descriptionW);
-    const detailText = details.filter(Boolean).join(' · ');
-    const detailLines = detailText
-      ? doc.splitTextToSize(detailText, descriptionW)
-      : [];
-    const messageLines = message
-      ? doc.splitTextToSize(`Cake message: "${message}"`, descriptionW)
-      : [];
+    const itemTotal = qty * unitPrice;
 
-    const rowHeight =
-      Math.max(5, nameLines.length * 4.5) +
-      (detailLines.length ? detailLines.length * 4 + 1 : 0) +
-      (messageLines.length ? messageLines.length * 4 + 1 : 0) +
-      7;
+    // Split long names so they do not overlap the price.
+    const nameLines = doc.splitTextToSize(
+      name,
+      INNER_WIDTH - 20
+    );
 
-    ensureSpace(rowHeight + 2);
+    doc.setFont('courier', 'bold');
+    doc.setFontSize(8);
 
-    // Redraw the header after a page break.
-    // The first-page header is already present, so this is only
-    // needed when ensureSpace created a new page.
-    // A compact row layout keeps the receipt easy to scan.
+    nameLines.forEach((line: string, index: number) => {
+      doc.text(line, MARGIN, y + index * 4);
+    });
 
-    const startY = y;
+    doc.text(money(itemTotal), RECEIPT_WIDTH - MARGIN, y, {
+      align: 'right',
+    });
 
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(9);
-    setText(COLORS.ink);
-    doc.text(String(safeQty), qtyX, startY);
+    y += Math.max(5, nameLines.length * 4);
 
-    doc.text(nameLines, itemX, startY);
+    doc.setFont('courier', 'normal');
+    doc.setFontSize(8);
 
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8.5);
-    doc.text(money(amount), priceX, startY, { align: 'right' });
+    details.filter(Boolean).forEach((detail) => {
+      addWrapped(`  ${detail}`);
+    });
 
-    let detailY = startY + Math.max(5, nameLines.length * 4.5);
-
-    if (detailLines.length) {
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(7.5);
-      setText(COLORS.muted);
-      doc.text(detailLines, itemX, detailY);
-      detailY += detailLines.length * 4 + 1;
+    if (cakeMessage) {
+      addWrapped(`  Message: ${cakeMessage}`, {
+        color: C.burgundy,
+      });
     }
 
-    if (messageLines.length) {
-      doc.setFont('helvetica', 'italic');
-      doc.setFontSize(7.5);
-      setText(COLORS.burgundy);
-      doc.text(messageLines, itemX, detailY);
-      detailY += messageLines.length * 4 + 1;
-    }
-
-    y = Math.max(startY + rowHeight - 3, detailY + 2);
-    line(y);
-    y += 6;
+    y += 2;
   };
 
-  (order.order_items ?? []).forEach((item) => {
+  items.forEach((item) => {
+    const details = [
+      item.size_label ? `Size: ${item.size_label}` : '',
+      item.flavour ? `Flavour: ${item.flavour}` : '',
+      item.design_label ? `Design: ${item.design_label}` : '',
+    ].filter(Boolean);
+
     drawItem(
-      textOr(item.product_name, 'Cake'),
-      numberOrZero(item.qty),
-      numberOrZero(item.unit_price),
-      [item.size_label, item.flavour, item.design_label].filter(
-        (v): v is string => Boolean(v)
-      ),
+      `${text(item.product_name, 'Cake')} x${num(item.qty)}`,
+      num(item.qty),
+      num(item.unit_price),
+      details,
       item.cake_message
     );
   });
 
-  (order.order_upsells ?? []).forEach((item) => {
+  extras.forEach((item) => {
     drawItem(
-      `Extra: ${textOr(item.upsell_name, 'Additional item')}`,
-      numberOrZero(item.qty),
-      numberOrZero(item.unit_price)
+      `${text(item.upsell_name, 'Extra')} x${num(item.qty)}`,
+      num(item.qty),
+      num(item.unit_price)
     );
   });
 
-  // --------------------------------------------------
-  // 4. PAYMENT SUMMARY
-  // --------------------------------------------------
+  separator();
 
-  const discount = Math.max(0, numberOrZero(order.discount_amount));
-  const deliveryFee = Math.max(
+  // =================================================
+  // 6. PAYMENT SUMMARY
+  // =================================================
+
+  const discount = Math.max(
     0,
-    numberOrZero(order.delivery_charge ?? order.delivery_fee)
+    num(order.discount_amount)
   );
 
-  // Compatibility with the original code:
-  // order.subtotal is treated as the amount after discount,
-  // but before delivery charges.
-  const amountAfterDiscount = numberOrZero(order.subtotal);
-  const subtotalBeforeDiscount = amountAfterDiscount + discount;
-  const total = numberOrZero(order.total_amount) ||
+  const deliveryFee = Math.max(
+    0,
+    num(order.delivery_charge ?? order.delivery_fee)
+  );
+
+  // Assumes subtotal is after discount and before delivery.
+  const amountAfterDiscount = num(order.subtotal);
+  const subtotalBeforeDiscount =
+    amountAfterDiscount + discount;
+
+  const calculatedTotal =
     amountAfterDiscount + deliveryFee;
 
-  ensureSpace(43);
+  const total =
+    order.total_amount != null &&
+    String(order.total_amount).trim() !== '' &&
+    Number.isFinite(Number(order.total_amount))
+      ? Number(order.total_amount)
+      : calculatedTotal;
 
-  y += 2;
-  const summaryW = 88;
-  const summaryX = R - summaryW;
-
-  doc.setFillColor(...COLORS.cream);
-  doc.roundedRect(summaryX, y, summaryW, discount > 0 ? 39 : 33, 2, 2, 'F');
-
-  const labelX = summaryX + 5;
-  const valueX = R - 5;
-  let sy = y + 8;
-
-  const summaryRow = (label: string, value: string, color = COLORS.ink) => {
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8.5);
-    setText(color);
-    doc.text(label, labelX, sy);
-    doc.text(value, valueX, sy, { align: 'right' });
-    sy += 6;
-  };
-
-  summaryRow('Subtotal', money(subtotalBeforeDiscount));
+  row('Subtotal', money(subtotalBeforeDiscount));
 
   if (discount > 0) {
-    summaryRow(
-      `Discount (${textOr(order.promo_code, 'Promo')})`,
-      `-${money(discount)}`,
-      COLORS.burgundy
+    row(
+      `Discount (${text(order.promo_code, 'Promo')})`,
+      `-${money(discount)}`
     );
   }
 
   if (deliveryFee > 0) {
-    summaryRow('Delivery charge', money(deliveryFee));
+    row('Delivery', money(deliveryFee));
   }
 
-  doc.setDrawColor(...COLORS.olive);
-  doc.setLineWidth(0.4);
-  doc.line(labelX, sy - 2, valueX, sy - 2);
+  separator();
 
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(11);
-  setText(COLORS.burgundy);
-  doc.text('TOTAL', labelX, sy + 4);
-  doc.text(money(total), valueX, sy + 4, { align: 'right' });
+  doc.setFont('courier', 'bold');
+  doc.setFontSize(12);
+  doc.setTextColor(...C.burgundy);
 
-  y += discount > 0 ? 45 : 39;
+  doc.text('TOTAL', MARGIN, y);
 
-  // --------------------------------------------------
-  // 5. THANK-YOU PANEL
-  // --------------------------------------------------
-
-  ensureSpace(25);
-
-  y += 4;
-  doc.setFillColor(...COLORS.burgundyLight);
-  doc.roundedRect(M, y, CONTENT_W, 20, 2, 2, 'F');
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(11);
-  setText(COLORS.burgundy);
-  doc.text('Thank you for choosing us!', W / 2, y + 8, {
-    align: 'center',
+  doc.text(money(total), RECEIPT_WIDTH - MARGIN, y, {
+    align: 'right',
   });
 
-  doc.setFont('helvetica', 'normal');
+  y += 8;
+
+  doc.setTextColor(...C.black);
+  doc.setFont('courier', 'normal');
   doc.setFontSize(8);
-  setText(COLORS.muted);
-  doc.text('Questions? Contact us on WhatsApp: +880 1519 409555', W / 2, y + 14, {
-    align: 'center',
-  });
 
-  // --------------------------------------------------
-  // 6. FOOTERS ON EVERY PAGE
-  // --------------------------------------------------
-
-  const pageCount = doc.getNumberOfPages();
-
-  for (let page = 1; page <= pageCount; page++) {
-    doc.setPage(page);
-    drawFooter(page, pageCount);
+  if (order.payment_method) {
+    row('Payment', text(order.payment_method));
   }
+
+  if (order.payment_status) {
+    row('Status', text(order.payment_status));
+  }
+
+  separator();
+
+  // =================================================
+  // 7. DECORATIVE BARCODE
+  // =================================================
+
+  // This barcode-like graphic is decorative and is not
+  // guaranteed to be scannable or encode the receipt number.
+  const reference = text(order.reference, 'ASPEYA');
+
+  let seed = 0;
+
+  for (let i = 0; i < reference.length; i++) {
+    seed = (seed * 31 + reference.charCodeAt(i)) >>> 0;
+  }
+
+  let barX = MARGIN;
+  const barcodeY = y;
+  const barcodeHeight = 13;
+  const barcodeWidth = INNER_WIDTH;
+
+  doc.setFillColor(...C.black);
+
+  // Start/end markers
+  doc.rect(barX, barcodeY, 0.8, barcodeHeight, 'F');
+  barX += 1.5;
+
+  while (barX < MARGIN + barcodeWidth - 2) {
+    seed = (seed * 1664525 + 1013904223) >>> 0;
+
+    const bar = 0.35 + (seed % 3) * 0.25;
+    const gap = 0.3 + ((seed >>> 5) % 3) * 0.2;
+
+    doc.rect(barX, barcodeY, bar, barcodeHeight, 'F');
+    barX += bar + gap;
+  }
+
+  doc.rect(
+    MARGIN + barcodeWidth - 1,
+    barcodeY,
+    0.8,
+    barcodeHeight,
+    'F'
+  );
+
+  y += barcodeHeight + 5;
+
+  doc.setFont('courier', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(...C.black);
+
+  center(reference, y);
+  y += 8;
+
+  // =================================================
+  // 8. THANK-YOU MESSAGE
+  // =================================================
+
+  doc.setFont('courier', 'bold');
+  doc.setFontSize(9);
+  doc.setTextColor(...C.burgundy);
+
+  center('Thank you for your order!', y);
+  y += 6;
+
+  doc.setFont('courier', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(...C.black);
+
+  center('We appreciate your business.', y);
+  y += 5;
+
+  center('Made with love by Cakes by Aspeya', y);
+  y += 7;
+
+  // Add a small white margin at the bottom of the receipt.
+  // The custom page height leaves enough space for normal orders.
 
   return doc;
 }
