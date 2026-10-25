@@ -297,9 +297,10 @@ export function ProductDetailClient({
         </div>
       )}
 
-      {/* MOBILE STICKY QUICK ADD BAR */}
+            {/* MOBILE STICKY QUICK ADD BAR */}
       <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-olive/20 bg-cream/95 p-3 px-4 backdrop-blur-md md:hidden shadow-[0_-10px_20px_-10px_rgba(0,0,0,0.1)]">
-        <div className="flex items-center justify-between gap-4 max-w-lg mx-auto pr-14">
+        {/* 👇 Removed pr-14, changed to standard max-w-lg */}
+        <div className="flex items-center justify-between gap-4 max-w-lg mx-auto">
           <div className="flex items-center rounded-full border border-olive/30 bg-white">
             <button type="button" onClick={() => setQty(q => Math.max(1, q - 1))} className="px-3 py-1.5 text-olive-dark">−</button>
             <span className="w-5 text-center text-sm font-medium">{qty}</span>
