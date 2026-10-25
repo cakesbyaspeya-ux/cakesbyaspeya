@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/components/cart/CartProvider';
 
@@ -12,13 +12,25 @@ export function DeliveryForm({ onBack }: { onBack: () => void }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Address states
+  // Address & Location states
   const [address, setAddress] = useState('');
   const [area, setArea] = useState('');
   const [locating, setLocating] = useState(false);
 
+  // Conditions & Availability states
+  const [agreed, setAgreed] = useState(false);
+  const [blockedDates, setBlockedDates] = useState<string[]>([]);
+
   const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
   const minDate = tomorrow.toISOString().split('T')[0];
+
+  // Fetch blocked dates on load
+  useEffect(() => {
+    fetch('/api/lookup/availability')
+      .then(res => res.json())
+      .then(data => setBlockedDates(data.blockedDates || []))
+      .catch(() => {});
+  }, []);
 
   const AREAS = [
     'Chawkbazar', 'Kotwali', 'Panchlaish', 'Khulshi', 'Halishahar', 
@@ -28,65 +40,42 @@ export function DeliveryForm({ onBack }: { onBack: () => void }) {
 
   // Handle Current Location Button
   async function handleUseCurrentLocation() {
-    if (!navigator.geolocation) {
-      alert('Geolocation is not supported by your browser');
-      return;
-    }
-
+    if (!navigator.geolocation) return alert('Geolocation is not supported by your browser');
     setLocating(true);
     
-    // Add a timeout so it doesn't hang forever if the browser ignores it
-    const timeoutId = setTimeout(() => {
-      if (locating) {
-        setLocating(false);
-        alert('Location request timed out. Please check your browser permissions or type your address manually.');
-      }
-    }, 15000);
-
     navigator.geolocation.getCurrentPosition(
       async (position) => {
-        clearTimeout(timeoutId);
         const { latitude, longitude } = position.coords;
-        
-               try {
-          console.log("Coordinates found:", latitude, longitude);
-          
+        try {
           const res = await fetch('/api/geocode', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ lat: latitude, lng: longitude }),
           });
-          
           const data = await res.json();
-          console.log("Geocode API response:", data);
           
           if (res.ok && data.address) {
             setAddress(data.address);
             const detectedArea = AREAS.find(a => data.address.includes(a));
             if (detectedArea) setArea(detectedArea);
           } else {
-            // 👇 This will now show the EXACT Google error instead of a generic one
-            alert(`API Error: ${data.error || 'Could not find address'}`);
+            alert(`API Error: ${data.error}`);
           }
         } catch (err) {
-          console.error("Fetch error:", err);
-          alert('Network error. Check if your dev server is running.');
+          alert('Failed to connect to the server.');
         } finally {
           setLocating(false);
         }
       },
-      (err) => {
-        clearTimeout(timeoutId);
-        setLocating(false);
-        console.error("Geolocation error:", err);
-        alert(`Location Error: ${err.message}. Please allow location access in your browser settings.`);
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      (err) => { setLocating(false); alert('Location Error: Please allow location access.'); },
+      { enableHighAccuracy: true, timeout: 10000 }
     );
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (!agreed) return setError('You must agree to the terms and conditions to place an order.');
+    
     setLoading(true);
     setError(null);
 
@@ -112,18 +101,15 @@ export function DeliveryForm({ onBack }: { onBack: () => void }) {
         design_id: it.design_id,       
         design_label: it.design_label, 
         image: it.image,               
+        custom_design_url: it.custom_design_url, // 👈 Passed custom design
         flavour: it.flavour,
         size_label: it.size_label,
         cake_message: it.cake_message,
         unit_price: it.unit_price,
         qty: it.qty,
-        custom_design_url: it.custom_design_url, // 👈 Add this
       })),
       upsells: upsells.map(u => ({
-        id: u.id,
-        name: u.name,
-        price: u.price,
-        qty: u.qty
+        id: u.id, name: u.name, price: u.price, qty: u.qty
       }))
     };
 
@@ -154,12 +140,9 @@ export function DeliveryForm({ onBack }: { onBack: () => void }) {
         ← Back to items
       </button>
 
-      {error && (
-        <div className="rounded-xl bg-burgundy/10 p-4 text-sm text-burgundy">
-          {error}
-        </div>
-      )}
+      {error && <div className="rounded-xl bg-burgundy/10 p-4 text-sm text-burgundy">{error}</div>}
 
+      {/* 1. Customer Details */}
       <fieldset className="rounded-2xl bg-cream-card p-5 md:p-6 ring-1 ring-black/5 space-y-4">
         <legend className="px-2 text-sm font-medium text-olive-dark">Your details</legend>
         <div className="grid gap-4 sm:grid-cols-2">
@@ -178,6 +161,7 @@ export function DeliveryForm({ onBack }: { onBack: () => void }) {
         </label>
       </fieldset>
 
+      {/* 2. Delivery Method */}
       <fieldset className="rounded-2xl bg-cream-card p-5 md:p-6 ring-1 ring-black/5">
         <legend className="px-2 text-sm font-medium text-olive-dark">Delivery method</legend>
         <div className="grid gap-3 sm:grid-cols-2">
@@ -192,12 +176,25 @@ export function DeliveryForm({ onBack }: { onBack: () => void }) {
         </div>
       </fieldset>
 
+      {/* 3. Schedule */}
       <fieldset className="rounded-2xl bg-cream-card p-5 md:p-6 ring-1 ring-black/5 space-y-4">
         <legend className="px-2 text-sm font-medium text-olive-dark">Schedule</legend>
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="block">
             <span className="mb-1 block text-sm font-medium text-ink">Date</span>
-            <input type="date" name="date" min={minDate} className="input" required />
+            <input 
+              type="date" 
+              name="date" 
+              min={minDate} 
+              className="input" 
+              required 
+              onChange={(e) => {
+                if (blockedDates.includes(e.target.value)) {
+                  alert('Sorry, we are fully booked on this date. Please select another day.');
+                  e.target.value = '';
+                }
+              }}
+            />
           </label>
           <label className="block">
             <span className="mb-1 block text-sm font-medium text-ink">Preferred Time</span>
@@ -212,54 +209,46 @@ export function DeliveryForm({ onBack }: { onBack: () => void }) {
         </div>
       </fieldset>
 
+      {/* 4. Delivery Address */}
       {method === 'delivery' && (
         <fieldset className="rounded-2xl bg-cream-card p-5 md:p-6 ring-1 ring-black/5 space-y-4">
           <legend className="px-2 text-sm font-medium text-olive-dark">Delivery address</legend>
-          
           <label className="block">
             <span className="mb-1 block text-sm font-medium text-ink">Area</span>
-            <select 
-              name="area" 
-              value={area}
-              onChange={(e) => setArea(e.target.value)}
-              className="input" 
-              required 
-            >
+            <select name="area" value={area} onChange={(e) => setArea(e.target.value)} className="input" required>
               <option value="" disabled>Select your area</option>
               {AREAS.map(a => <option key={a} value={a}>{a}</option>)}
             </select>
           </label>
-
           <div className="block">
             <span className="mb-1 block text-sm font-medium text-ink">Full address</span>
-            
-            <textarea 
-              name="address" 
-              rows={3} 
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              placeholder="House, road, landmark..." 
-              className="input" 
-              required 
-            />
-
-            {/* Use Current Location Button */}
-            <button
-              type="button"
-              onClick={handleUseCurrentLocation}
-              disabled={locating}
-              className="mt-2 flex items-center gap-2 text-sm font-medium text-burgundy hover:text-burgundy-dark transition disabled:opacity-50"
-            >
+            <textarea name="address" rows={3} value={address} onChange={(e) => setAddress(e.target.value)} placeholder="House, road, landmark..." className="input" required />
+            <button type="button" onClick={handleUseCurrentLocation} disabled={locating} className="mt-2 flex items-center gap-2 text-sm font-medium text-burgundy hover:text-burgundy-dark transition disabled:opacity-50">
               {locating ? '📍 Getting location...' : '📍 Use my current location'}
             </button>
           </div>
         </fieldset>
       )}
 
+      {/* 5. Instructions */}
       <fieldset className="rounded-2xl bg-cream-card p-5 md:p-6 ring-1 ring-black/5">
         <legend className="px-2 text-sm font-medium text-olive-dark">Special instructions</legend>
         <textarea name="instructions" rows={2} placeholder="Allergies, design notes (optional)" className="input" />
       </fieldset>
+
+      {/* 6. Terms & Conditions Checkbox */}
+      <label className="flex items-start gap-3 rounded-2xl bg-cream-card p-5 ring-1 ring-black/5 cursor-pointer">
+        <input 
+          type="checkbox" 
+          checked={agreed} 
+          onChange={(e) => setAgreed(e.target.checked)}
+          className="mt-1 w-4 h-4 accent-burgundy" 
+          required
+        />
+        <span className="text-sm text-olive-dark leading-tight">
+          I agree to the <strong>24-hour advance notice policy</strong>. I understand that custom cakes cannot be cancelled or refunded once baking has started.
+        </span>
+      </label>
 
       <div className="flex flex-col items-end gap-2">
         <button type="submit" disabled={loading} className="rounded-full bg-whatsapp px-8 py-3.5 font-medium text-white shadow hover:brightness-95 disabled:opacity-50 transition w-full sm:w-auto">
