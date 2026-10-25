@@ -8,6 +8,7 @@ export type ProductCardData = {
   image_layout: 'slideshow' | 'static';
   images: string[];
   from_price: number;
+  flavours: string[]; // 👈 ADDED THIS LINE
 };
 
 const PKR = (n: number) => '৳' + n.toLocaleString('en-BD');

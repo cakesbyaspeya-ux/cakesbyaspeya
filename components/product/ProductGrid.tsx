@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { ProductCard, type ProductCardData } from './ProductCard';
+import { ProductCard } from './ProductCard';
+import type { ProductCardData } from '@/lib/products'; // 👈 Ensure we use the exact type from lib
 
 export function ProductGrid({ initialProducts }: { initialProducts: ProductCardData[] }) {
   const [search, setSearch] = useState('');
@@ -11,7 +12,9 @@ export function ProductGrid({ initialProducts }: { initialProducts: ProductCardD
   // Extract all unique flavours for the dropdown
   const allFlavours = useMemo(() => {
     const flavours = new Set<string>();
-    initialProducts.forEach(p => p.flavours.forEach(f => flavours.add(f)));
+    initialProducts.forEach(p => {
+      (p.flavours || []).forEach(f => flavours.add(f)); // Added safety check
+    });
     return ['All', ...Array.from(flavours)].sort();
   }, [initialProducts]);
 
@@ -27,7 +30,7 @@ export function ProductGrid({ initialProducts }: { initialProducts: ProductCardD
 
     // 2. Filter by Flavour
     if (flavour !== 'All') {
-      result = result.filter(p => p.flavours.includes(flavour));
+      result = result.filter(p => (p.flavours || []).includes(flavour));
     }
 
     // 3. Sort
