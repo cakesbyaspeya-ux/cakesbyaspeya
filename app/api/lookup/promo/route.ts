@@ -20,17 +20,14 @@ export async function POST(req: Request) {
 
     if (!promo) return NextResponse.json({ error: 'Invalid or expired code' }, { status: 404 });
 
-    // Check expiry
     if (promo.expires_at && new Date(promo.expires_at) < new Date()) {
       return NextResponse.json({ error: 'This code has expired' }, { status: 400 });
     }
 
-    // Check min order
     if (Number(promo.min_order_value) > subtotal) {
       return NextResponse.json({ error: `Minimum order ৳${promo.min_order_value} required` }, { status: 400 });
     }
 
-    // Calculate discount
     let discount = 0;
     if (promo.discount_type === 'percentage') {
       discount = (subtotal * Number(promo.discount_value)) / 100;
@@ -38,7 +35,6 @@ export async function POST(req: Request) {
       discount = Number(promo.discount_value);
     }
 
-    // Discount cannot exceed subtotal
     if (discount > subtotal) discount = subtotal;
 
     return NextResponse.json({ 
