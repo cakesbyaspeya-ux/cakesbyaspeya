@@ -6,7 +6,7 @@ import { useCart } from '@/components/cart/CartProvider';
 
 export function DeliveryForm({ onBack }: { onBack: () => void }) {
   const router = useRouter();
-  const { items, subtotal, upsells, clear } = useCart();
+  const { items, upsells, clear } = useCart(); // <-- Added upsells here
   const [method, setMethod] = useState<'delivery' | 'pickup'>('delivery');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -41,22 +41,22 @@ export function DeliveryForm({ onBack }: { onBack: () => void }) {
       items: items.map(it => ({
         product_id: it.product_id,
         product_name: it.product_name,
-        design_id: it.design_id,       // <-- Added
-        design_label: it.design_label, // <-- Added
-        image: it.image,               // <-- Added (used as design_url)
+        design_id: it.design_id,       
+        design_label: it.design_label, 
+        image: it.image,               
         flavour: it.flavour,
         size_label: it.size_label,
         cake_message: it.cake_message,
         unit_price: it.unit_price,
         qty: it.qty,
-      }))
-      // Add this right after the `items: items.map(...)` block:
+      })),
+      // Add upsells to payload
       upsells: upsells.map(u => ({
         id: u.id,
         name: u.name,
         price: u.price,
         qty: u.qty
-      })),
+      }))
     };
 
     try {

@@ -77,7 +77,7 @@ export async function POST(req: Request) {
 ${body.delivery_method === 'delivery' ? `📍 *Area:* ${body.area}` : '🏪 *Pickup*'}
 
 📦 *Items:*
-${orderItems.map((item: any) => `- ${item.qty}x ${item.product_name} ${item.design_label ? `(${item.design_label})` : ''}`).join('\n')}
+${orderItems.map((item: any) => `- ${item.qty}x ${item.product_name}`).join('\n')}
 ${body.upsells?.length ? `\n✨ *Extras:*\n${body.upsells.map((u:any) => `- ${u.qty}x ${u.name}`).join('\n')}` : ''}
 
 💰 *Subtotal:* ৳${subtotal.toLocaleString('en-BD')}

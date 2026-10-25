@@ -4,16 +4,18 @@ import { createServerClient } from '@/lib/supabase/server';
 import { StatusButtons } from './StatusButtons';
 import { CopyLinkButton } from './CopyLinkButton';
 
+const PKR = (n: number) => '৳' + n.toLocaleString('en-BD');
+
 export default async function OrderDetailPage({ params }: { params: Promise<{ ref: string }> }) {
   const { ref } = await params;
   const sb = await createServerClient();
 
-  // Fetch order and items
   const { data: order, error } = await sb
     .from('orders')
     .select(`
       *,
-      order_items (*)
+      order_items (*),
+      order_upsells (*)
     `)
     .eq('reference', ref)
     .single();
@@ -23,12 +25,8 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ re
   }
 
   const isPickup = order.delivery_method === 'pickup';
-  
-  // Format WhatsApp link to message the customer directly
   const waPhone = order.whatsapp.replace(/\D/g, '').replace(/^0/, '880');
   const waLink = `https://wa.me/${waPhone}`;
-
-  // Extract all cake messages for a dedicated alert box
   const cakeMessages = order.order_items.filter((item: any) => item.cake_message && item.cake_message.trim() !== '');
 
   return (
@@ -52,10 +50,8 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ re
           </p>
         </div>
         
-        {/* Action Buttons */}
         <div className="flex flex-wrap gap-2">
           <CopyLinkButton reference={order.reference} />
-          
           <a 
             href={waLink} 
             target="_blank" 
@@ -67,7 +63,6 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ re
         </div>
       </div>
 
-      {/* 🚨 DEDICATED CAKE MESSAGE SECTION 🚨 */}
       {cakeMessages.length > 0 && (
         <div className="mb-8 rounded-2xl bg-burgundy/5 p-6 ring-1 ring-burgundy/20">
           <h2 className="font-display text-xl text-burgundy border-b border-burgundy/20 pb-2 mb-4 flex items-center gap-2">
@@ -76,7 +71,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ re
           <ul className="space-y-4">
             {cakeMessages.map((item: any, idx: number) => (
               <li key={idx} className="bg-white p-4 rounded-xl shadow-sm border border-burgundy/10">
-                <p className="text-2xl font-display text-ink italic mb-2">"{item.cake_message}"</p>
+                <p className="text-2xl font-display text-ink italic mb-2">&quot;{item.cake_message}&quot;</p>
                 <p className="text-xs text-olive-dark uppercase tracking-wide font-medium">
                   — For {item.qty}x {item.product_name} {item.size_label ? `(${item.size_label})` : ''}
                 </p>
@@ -87,7 +82,6 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ re
       )}
 
       <div className="grid gap-6 md:grid-cols-2 mb-6">
-        {/* Customer Info */}
         <section className="rounded-2xl bg-cream-card p-5 ring-1 ring-black/5">
           <h2 className="font-display text-lg border-b border-olive/20 pb-2 mb-3">Customer</h2>
           <p className="font-medium text-ink">{order.customer_name}</p>
@@ -95,7 +89,6 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ re
           <p className="text-sm text-olive-dark">WhatsApp: {order.whatsapp}</p>
         </section>
 
-        {/* Delivery Info */}
         <section className="rounded-2xl bg-cream-card p-5 ring-1 ring-black/5">
           <h2 className="font-display text-lg border-b border-olive/20 pb-2 mb-3">
             {isPickup ? 'Pickup Info' : 'Delivery Info'}
@@ -120,13 +113,12 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ re
           {order.special_instructions && (
             <div className="mt-4 rounded-lg bg-olive/5 p-3 border border-olive/10">
               <p className="text-xs font-medium text-olive-dark mb-1">Special Instructions:</p>
-              <p className="text-sm text-ink italic">"{order.special_instructions}"</p>
+              <p className="text-sm text-ink italic">&quot;{order.special_instructions}&quot;</p>
             </div>
           )}
         </section>
       </div>
 
-      {/* Order Items List */}
       <section className="rounded-2xl bg-cream-card p-5 ring-1 ring-black/5 mb-8">
         <h2 className="font-display text-lg border-b border-olive/20 pb-2 mb-3">Items Ordered</h2>
         <ul className="space-y-4">
@@ -141,30 +133,30 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ re
                   {item.size_label && <p>Size: {item.size_label}</p>}
                 </div>
               </div>
-              <p className="font-medium text-ink shrink-0">৳{Number(item.line_total).toLocaleString('en-BD')}</p>
+              <p className="font-medium text-ink shrink-0">{PKR(Number(item.line_total))}</p>
             </li>
           ))}
         </ul>
-        <div className="border-t border-olive/20 mt-4 pt-4 flex justify-between font-medium">
-          <p className="text-olive-dark">Subtotal</p>
-          <p className="text-burgundy text-lg">৳{Number(order.subtotal).toLocaleString('en-BD')}</p>
-        </div>
-
-                {order.order_upsells && order.order_upsells.length > 0 && (
+        
+        {order.order_upsells && order.order_upsells.length > 0 && (
           <div className="mt-6 border-t border-olive/10 pt-4">
             <h3 className="text-sm font-medium text-olive-dark mb-2">Extras / Decorations:</h3>
             <ul className="space-y-1">
               {order.order_upsells.map((u: any) => (
                 <li key={u.id} className="text-sm text-ink">
-                  {u.qty}× {u.upsell_name} <span className="text-olive-dark">({PKR ? PKR(u.unit_price * u.qty) : `৳${u.unit_price * u.qty}`})</span>
+                  {u.qty}× {u.upsell_name} <span className="text-olive-dark">({PKR(Number(u.unit_price * u.qty))})</span>
                 </li>
               ))}
             </ul>
           </div>
         )}
+
+        <div className="border-t border-olive/20 mt-4 pt-4 flex justify-between font-medium">
+          <p className="text-olive-dark">Subtotal</p>
+          <p className="text-burgundy text-lg">{PKR(Number(order.subtotal))}</p>
+        </div>
       </section>
 
-      {/* Status Update Buttons */}
       <section className="rounded-2xl bg-cream p-1">
         <h3 className="text-sm font-medium text-olive-dark mb-3 px-1">Update Order Status:</h3>
         <StatusButtons orderId={order.id} currentStatus={order.status} />

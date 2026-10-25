@@ -91,6 +91,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   };
 
   const remove = (key: string) => setItems((prev) => prev.filter((i) => i.key !== key));
+  
   const setQty = (key: string, qty: number) =>
     setItems((prev) => qty <= 0 ? prev.filter((i) => i.key !== key) : prev.map((i) => (i.key === key ? { ...i, qty } : i)));
 
