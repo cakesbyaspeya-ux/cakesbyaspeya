@@ -2,7 +2,7 @@
 
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 
-export function SalesChart({ data }: { data: any[] }) {
+export function SalesChart({ data, isMonth = false }: { data: any[]; isMonth?: boolean }) {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -19,6 +19,8 @@ export function SalesChart({ data }: { data: any[] }) {
           tickLine={false} 
           tick={{ fill: '#414D2C', fontSize: 12 }} 
           dy={10}
+          // If showing 30 days, only show every 3rd label to prevent overlap
+          interval={isMonth ? 2 : 0}
         />
         <YAxis 
           axisLine={false} 

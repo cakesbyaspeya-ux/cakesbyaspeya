@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { createServerClient } from '@/lib/supabase/server';
-import { SalesChart } from './SalesChart';
+import { RevenueChart } from './RevenueChart';
 
 const PKR = (n: number) => '৳' + n.toLocaleString('en-BD');
 
@@ -19,7 +19,7 @@ export default async function AdminDashboard() {
     .order('created_at', { ascending: false })
     .limit(5);
 
-  // 3. Calculate Total Revenue (all time, excluding cancelled)
+  // 3. Calculate Total Revenue & Top Sellers (All time)
   const { data: allOrders } = await sb
     .from('orders')
     .select('subtotal, created_at')
@@ -27,7 +27,6 @@ export default async function AdminDashboard() {
     
   const totalRevenue = (allOrders ?? []).reduce((sum, order) => sum + Number(order.subtotal), 0);
 
-  // 4. Calculate Top Selling Cakes (excluding cancelled orders)
   const { data: items } = await sb
     .from('order_items')
     .select('product_name, qty, orders!inner(status)')
@@ -42,9 +41,12 @@ export default async function AdminDashboard() {
     .sort((a, b) => (b[1] as number) - (a[1] as number))
     .slice(0, 3);
 
-  // 5. Prepare Data for the Chart (Last 7 Days)
-  const chartData = [];
-  for (let i = 6; i >= 0; i--) {
+  // 4. Prepare Data for the Charts (7 Days & 30 Days)
+  const chartData7 = [];
+  const chartData30 = [];
+
+  // Loop 30 times to build both arrays
+  for (let i = 29; i >= 0; i--) {
     const d = new Date();
     d.setDate(d.getDate() - i);
     const dateStr = d.toISOString().split('T')[0];
@@ -53,10 +55,17 @@ export default async function AdminDashboard() {
       .filter(o => o.created_at.startsWith(dateStr))
       .reduce((sum, o) => sum + Number(o.subtotal), 0);
       
-    chartData.push({
-      name: d.toLocaleDateString('en-GB', { weekday: 'short' }),
+    const dataPoint = {
+      name: d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }),
       revenue: dayRevenue
-    });
+    };
+
+    chartData30.push(dataPoint);
+
+    // If it's within the last 7 days, also add to the 7-day array
+    if (i < 7) {
+      chartData7.push(dataPoint);
+    }
   }
 
   return (
@@ -90,13 +99,8 @@ export default async function AdminDashboard() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Sales Chart */}
-        <div className="lg:col-span-2 rounded-2xl bg-cream-card p-5 ring-1 ring-black/5 shadow-sm">
-          <h2 className="font-display text-lg text-ink mb-4">Revenue (Last 7 Days)</h2>
-          <div className="h-[250px] w-full">
-            <SalesChart data={chartData} />
-          </div>
-        </div>
+        {/* Revenue Chart (New Client Component) */}
+        <RevenueChart data7={chartData7} data30={chartData30} />
 
         {/* Recent Orders */}
         <div className="rounded-2xl bg-cream-card p-5 ring-1 ring-black/5 shadow-sm">

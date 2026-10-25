@@ -1,107 +1,178 @@
 import { jsPDF } from 'jspdf';
 
-const PKR = (n: number) => '৳' + n.toLocaleString('en-BD');
+const PKR = (n: number) => n.toLocaleString('en-BD', { minimumFractionDigits: 2 });
 
 export function generateReceiptPdf(order: any) {
-  const doc = new jsPDF();
-  
-  // Header
-  doc.setFontSize(22);
-  doc.setFont('helvetica', 'bold');
-  doc.text('Cakes by Aspeya', 105, 20, { align: 'center' });
-  
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  doc.text('Sanmar Ocean City / 2 No Gate', 105, 28, { align: 'center' });
-  doc.text('Women College Mor, Chittagong', 105, 33, { align: 'center' });
-  doc.text('+880 1519 409555', 105, 38, { align: 'center' });
-
-  doc.setLineWidth(0.5);
-  doc.line(20, 45, 190, 45);
-
-  // Order Info
-  doc.setFontSize(14);
-  doc.setFont('helvetica', 'bold');
-  doc.text('RECEIPT', 20, 55);
-  
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  doc.text(`Order Ref: ${order.reference}`, 20, 65);
-  doc.text(`Date: ${new Date(order.created_at).toLocaleDateString('en-GB')}`, 20, 70);
-  
-  doc.text(`Customer: ${order.customer_name}`, 120, 65);
-  doc.text(`Phone: ${order.phone}`, 120, 70);
-
-  // Delivery Info
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'bold');
-  doc.text('Delivery Details:', 20, 85);
-  doc.setFont('helvetica', 'normal');
-  doc.text(`Date: ${order.delivery_date} at ${order.preferred_time}`, 20, 92);
-  if (order.delivery_method === 'delivery') {
-    doc.text(`Area: ${order.area}`, 20, 97);
-    doc.text(`Address: ${order.address}`, 20, 102);
-  } else {
-    doc.text('Method: Store Pickup', 20, 97);
-  }
-
-  // Items Table
-  let yPos = 115;
-  doc.setFont('helvetica', 'bold');
-  doc.text('Item', 20, yPos);
-  doc.text('Qty', 120, yPos);
-  doc.text('Price', 160, yPos);
-  
-  doc.line(20, yPos + 2, 190, yPos + 2);
-  yPos += 10;
-
-  doc.setFont('helvetica', 'normal');
-  (order.order_items || []).forEach((item: any) => {
-    doc.text(item.product_name, 20, yPos);
-    doc.text(`${item.qty}`, 120, yPos);
-    doc.text(PKR(item.unit_price * item.qty), 160, yPos);
-    
-    let detailY = yPos + 5;
-    doc.setFontSize(9);
-    const details = [item.size_label, item.flavour, item.design_label].filter(Boolean).join(' · ');
-    if (details) doc.text(details, 25, detailY);
-    
-    if (item.cake_message) {
-      doc.setFont('helvetica', 'bold');
-      doc.text(`Message: "${item.cake_message}"`, 25, detailY + 5);
-      doc.setFont('helvetica', 'normal');
-    }
-    doc.setFontSize(10);
-    yPos += 20;
+  // Use A4 format, but we'll format it to look like a narrow receipt
+  const doc = new jsPDF({
+    format: 'a4',
+    unit: 'mm'
   });
 
-  // Extras
+  // --- Setup Fonts ---
+  doc.setFont('courier', 'bold');
+  
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const centerX = pageWidth / 2;
+  let yPos = 20;
+
+  // --- Header ---
+  doc.setFontSize(18);
+  doc.text('CAKES BY ASPEYA', centerX, yPos, { align: 'center' });
+  
+  yPos += 8;
+  doc.setFontSize(10);
+  doc.setFont('courier', 'normal');
+  doc.text('Sanmar Ocean City / 2 No Gate', centerX, yPos, { align: 'center' });
+  
+  yPos += 5;
+  doc.text('Women College Mor, Chittagong', centerX, yPos, { align: 'center' });
+  
+  yPos += 5;
+  doc.text('+880 1519 409555', centerX, yPos, { align: 'center' });
+
+  // --- Date & Ref ---
+  yPos += 10;
+  const dateStr = new Date(order.created_at).toLocaleDateString('en-GB');
+  doc.text(`Date: ${dateStr} | Ref: ${order.reference}`, centerX, yPos, { align: 'center' });
+
+  // --- Divider ---
+  yPos += 5;
+  doc.text('-'.repeat(72), 20, yPos);
+
+  // --- Customer Info ---
+  yPos += 6;
+  doc.text(`Customer: ${order.customer_name}`, 20, yPos);
+  doc.text(`Phone: ${order.phone}`, 120, yPos);
+
+  yPos += 5;
+  if (order.delivery_method === 'delivery') {
+    doc.text(`Deliver: ${order.delivery_date} | ${order.preferred_time}`, 20, yPos);
+    yPos += 5;
+    doc.text(`Address: ${order.area} - ${order.address}`, 20, yPos);
+  } else {
+    doc.text(`Pickup: ${order.delivery_date} | ${order.preferred_time}`, 20, yPos);
+  }
+
+  // --- Item Header ---
+  yPos += 6;
+  doc.text('-'.repeat(72), 20, yPos);
+  yPos += 6;
+  doc.setFont('courier', 'bold');
+  doc.text('QTY  ITEM', 20, yPos);
+  doc.text('PRICE', 190, yPos, { align: 'right' });
+  
+  yPos += 3;
+  doc.text('-'.repeat(72), 20, yPos);
+  
+  // --- Items Loop ---
+  yPos += 6;
+  doc.setFont('courier', 'normal');
+
+  (order.order_items || []).forEach((item: any) => {
+    // Split long names so they wrap nicely
+    const itemNameLines = doc.splitTextToSize(item.product_name, 120);
+    
+    // Print Qty and Item Name
+    doc.text(`${item.qty.toString().padEnd(3)}  ${itemNameLines[0]}`, 20, yPos);
+    
+    // Print Price (right aligned)
+    const price = item.unit_price * item.qty;
+    doc.text(`৳${PKR(price)}`, 190, yPos, { align: 'right' });
+    
+    // Print remaining name lines if wrapped
+    if (itemNameLines.length > 1) {
+      for (let i = 1; i < itemNameLines.length; i++) {
+        yPos += 5;
+        doc.text(`     ${itemNameLines[i]}`, 20, yPos);
+      }
+    }
+
+    // Print Size, Flavour, Design
+    const details = [item.size_label, item.flavour, item.design_label].filter(Boolean).join(' | ');
+    if (details) {
+      yPos += 5;
+      doc.setFontSize(9);
+      doc.text(`     ${details}`, 20, yPos);
+      doc.setFontSize(10);
+    }
+
+    // Print Cake Message
+    if (item.cake_message) {
+      yPos += 5;
+      doc.setFont('courier', 'bold');
+      const msgLines = doc.splitTextToSize(`Msg: "${item.cake_message}"`, 150);
+      msgLines.forEach((line: string) => {
+        doc.text(`     ${line}`, 20, yPos);
+        yPos += 5;
+      });
+      doc.setFont('courier', 'normal');
+      yPos -= 5; // adjust for loop increment
+    }
+    
+    yPos += 8; // spacing between items
+  });
+
+  // --- Extras / Upsells ---
   if (order.order_upsells && order.order_upsells.length > 0) {
     order.order_upsells.forEach((u: any) => {
-      doc.text(`Extra: ${u.upsell_name}`, 20, yPos);
-      doc.text(`${u.qty}`, 120, yPos);
-      doc.text(PKR(u.unit_price * u.qty), 160, yPos);
-      yPos += 10;
+      doc.text(`${u.qty.toString().padEnd(3)}  + Extra: ${u.upsell_name}`, 20, yPos);
+      const price = u.unit_price * u.qty;
+      doc.text(`৳${PKR(price)}`, 190, yPos, { align: 'right' });
+      yPos += 6;
     });
   }
 
-  // Totals
-  doc.line(20, yPos, 190, yPos);
-  yPos += 10;
+  // --- Totals Section ---
+  yPos += 2;
+  doc.text('-'.repeat(72), 20, yPos);
+  yPos += 6;
   
-  if (order.discount_amount > 0) {
-    doc.text(`Discount (${order.promo_code}): -${PKR(order.discount_amount)}`, 20, yPos);
-    yPos += 7;
+  // Subtotal (Calculate original total before discount)
+  const discount = Number(order.discount_amount) || 0;
+  const finalTotal = Number(order.subtotal);
+  const subTotal = finalTotal + discount;
+
+  doc.text('Subtotal:', 150, yPos);
+  doc.text(`৳${PKR(subTotal)}`, 190, yPos, { align: 'right' });
+  yPos += 6;
+
+  if (discount > 0) {
+    doc.text(`Discount (${order.promo_code || 'Applied'}):`, 150, yPos);
+    doc.text(`-৳${PKR(discount)}`, 190, yPos, { align: 'right' });
+    yPos += 6;
   }
 
-  doc.setFontSize(14);
-  doc.setFont('helvetica', 'bold');
-  doc.text('Total:', 20, yPos);
-  doc.text(PKR(order.subtotal), 160, yPos);
+  doc.setFont('courier', 'bold');
+  doc.setFontSize(12);
+  doc.text('TOTAL:', 150, yPos);
+  doc.text(`৳${PKR(finalTotal)}`, 190, yPos, { align: 'right' });
 
+  yPos += 6;
+  doc.setFont('courier', 'normal');
   doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  doc.text('Thank you for choosing Cakes by Aspeya!', 105, 280, { align: 'center' });
+  doc.text('-'.repeat(72), 20, yPos);
+
+  // --- Fake Barcode ---
+  yPos += 10;
+  doc.setFont('courier', 'normal');
+  doc.setFontSize(28);
+  // A visual trick to create a barcode-like look using pipes
+  doc.text('|||| ||| ||||| || |||| ||| |||||', centerX, yPos, { align: 'center' });
+  
+  yPos += 5;
+  doc.setFontSize(8);
+  doc.text(order.reference, centerX, yPos, { align: 'center' });
+
+  // --- Footer ---
+  yPos += 12;
+  doc.setFontSize(10);
+  doc.setFont('courier', 'bold');
+  doc.text('Thank you for choosing Cakes by Aspeya!', centerX, yPos, { align: 'center' });
+  
+  yPos += 5;
+  doc.setFont('courier', 'normal');
+  doc.text('We appreciate your business.', centerX, yPos, { align: 'center' });
 
   return doc;
 }
