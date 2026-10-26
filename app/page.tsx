@@ -3,6 +3,8 @@ import { getProducts } from '@/lib/products';
 import { ProductCard } from '@/components/product/ProductCard';
 import { TrackOrderWidget } from '@/components/home/TrackOrderWidget';
 import { RecentlyViewed } from '@/components/product/RecentlyViewed';
+import { AnnouncementBar } from '@/components/home/AnnouncementBar';
+import { HeroSlider } from '@/components/home/HeroSlider';
 
 const WHATSAPP_URL =
   'https://wa.me/8801519409555?text=Hi%20Cakes%20by%20Aspeya!%20I%20would%20like%20to%20place%20an%20order.';
@@ -49,14 +51,17 @@ export default async function HomePage() {
     getProducts('dessert'),
   ]);
 
-  const heroImage = cakes.find((cake) => cake.images?.length > 0)
-    ?.images[0];
+  const heroSlides = cakes
+    .filter((cake) => cake.images?.length > 0)
+    .slice(0, 5)
+    .map((cake) => ({ image: cake.images[0], title: 'Your moment. Your cake.' }));
 
   const featuredCakes = cakes.slice(0, 4);
   const featuredDesserts = desserts.slice(0, 6);
 
   return (
     <main className="overflow-hidden bg-cream text-ink">
+      <AnnouncementBar />
       {/* HERO */}
       <section className="relative mx-auto max-w-7xl px-4 pb-14 pt-10 sm:px-6 md:pb-20 md:pt-16 lg:px-8">
         {/* Decorative background */}
@@ -133,61 +138,8 @@ export default async function HomePage() {
             </div>
           </div>
 
-          {/* Hero image */}
-          <div className="relative mx-auto w-full max-w-xl animate-[fadeInUp_0.9s_ease-out_both]">
-            <div
-              aria-hidden="true"
-              className="absolute -right-3 -top-3 h-24 w-24 rounded-full border border-burgundy/20 sm:-right-5 sm:-top-5 sm:h-32 sm:w-32"
-            />
-
-            <div className="absolute -bottom-5 -left-5 h-32 w-32 rounded-full bg-olive/10 blur-2xl" />
-
-            <div className="group relative aspect-[4/4.5] overflow-hidden rounded-[2rem] bg-cream-dark shadow-2xl shadow-olive/10 sm:rounded-[2.5rem]">
-              {heroImage ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={heroImage}
-                  alt="Beautiful freshly made cake from Cakes by Aspeya"
-                  fetchPriority="high"
-                  className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                />
-              ) : (
-                <div className="flex h-full flex-col items-center justify-center gap-4 bg-gradient-to-br from-cream-dark to-burgundy/10">
-                  <span className="text-8xl">🎂</span>
-                  <p className="font-display text-xl text-olive-dark">
-                    Made with love
-                  </p>
-                </div>
-              )}
-
-              <div className="absolute inset-0 bg-gradient-to-t from-ink/65 via-transparent to-ink/5" />
-
-              <div className="absolute inset-x-0 bottom-0 p-6 text-cream sm:p-8">
-                <p className="text-xs font-medium uppercase tracking-[0.25em] text-cream/80">
-                  Sweetness in every detail
-                </p>
-                <h2 className="mt-2 font-display text-3xl sm:text-4xl">
-                  Your moment. Your cake.
-                </h2>
-                <Link
-                  href="/cakes"
-                  className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-cream transition-all hover:gap-4"
-                >
-                  Find your favourite <span>→</span>
-                </Link>
-              </div>
-            </div>
-
-            {/* Floating accent */}
-            <div className="absolute -left-3 top-8 rounded-2xl border border-white/70 bg-white/90 px-4 py-3 shadow-xl backdrop-blur-md transition-transform duration-300 hover:-translate-y-1 sm:-left-8 sm:top-12 sm:px-5">
-              <p className="font-display text-lg text-burgundy sm:text-xl">
-                Made for you
-              </p>
-              <p className="mt-1 text-xs text-olive-dark">
-                Every detail matters
-              </p>
-            </div>
-          </div>
+          {/* Dynamic hero image carousel */}
+          <HeroSlider slides={heroSlides} />
         </div>
       </section>
 
@@ -235,6 +187,51 @@ export default async function HomePage() {
                 <span className="mt-1 block text-xs text-olive-dark/75">
                   {item.subtitle}
                 </span>
+              </span>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* SHOP BY OCCASION */}
+      <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 md:py-18 lg:px-8">
+        <div className="mb-8 text-center">
+          <p className="text-xs font-semibold uppercase tracking-[0.25em] text-burgundy">
+            Made for every moment
+          </p>
+          <h2 className="mt-3 font-display text-3xl text-ink sm:text-4xl md:text-5xl">
+            What are we celebrating?
+          </h2>
+          <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-olive-dark sm:text-base">
+            From little surprises to milestone celebrations, find a cake for your moment.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          {[
+            { title: 'Birthdays', subtitle: 'Make a wish', symbol: '🎂' },
+            { title: 'Anniversaries', subtitle: 'Celebrate together', symbol: '♡' },
+            { title: 'Kids’ Parties', subtitle: 'Big smiles, sweet bites', symbol: '✦' },
+            { title: 'Just Because', subtitle: 'A little everyday joy', symbol: '✧' },
+          ].map((occasion, index) => (
+            <Link
+              key={occasion.title}
+              href="/cakes"
+              className="group relative isolate overflow-hidden rounded-3xl border border-olive/10 bg-white/70 p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-burgundy/20 hover:shadow-xl hover:shadow-olive/10 sm:p-7"
+              style={{ animationDelay: `${index * 100}ms` }}
+            >
+              <span className="absolute -right-3 -top-5 -z-10 text-7xl text-burgundy/5 transition-transform duration-500 group-hover:rotate-12 group-hover:scale-125">
+                {occasion.symbol}
+              </span>
+              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-burgundy/10 text-xl text-burgundy transition-all duration-300 group-hover:bg-burgundy group-hover:text-cream">
+                {occasion.symbol}
+              </span>
+              <h3 className="mt-5 font-display text-xl text-ink sm:text-2xl">
+                {occasion.title}
+              </h3>
+              <p className="mt-2 text-sm text-olive-dark/75">{occasion.subtitle}</p>
+              <span className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-burgundy transition-all group-hover:gap-3">
+                Explore cakes <span aria-hidden="true">→</span>
               </span>
             </Link>
           ))}
