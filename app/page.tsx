@@ -46,6 +46,16 @@ const ORDER_STEPS = [
   },
 ];
 
+// 👇 Helper to shuffle the images randomly
+function shuffleArray(array: string[]) {
+  const arr = [...array];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
 export default async function HomePage() {
   const sb = await createServerClient();
   
@@ -58,10 +68,18 @@ export default async function HomePage() {
 
   const occasions = occasionsRes.data || [];
 
-  const heroSlides = cakes
-    .filter((cake) => cake.images?.length > 0)
-    .slice(0, 5)
-    .map((cake) => ({ image: cake.images[0], title: 'Your moment. Your cake.' }));
+  // 👇 Gather ALL images from every cake and dessert
+  const allImages = [
+    ...cakes.flatMap((c) => c.images || []),
+    ...desserts.flatMap((d) => d.images || []),
+  ];
+
+  // 👇 Shuffle all images and pick up to 10 for the slideshow
+  const shuffledImages = shuffleArray(allImages);
+  const heroSlides = shuffledImages.slice(0, 10).map((image) => ({
+    image,
+    title: 'Your moment. Your cake.',
+  }));
 
   const featuredCakes = cakes.slice(0, 4);
   const featuredDesserts = desserts.slice(0, 6);
