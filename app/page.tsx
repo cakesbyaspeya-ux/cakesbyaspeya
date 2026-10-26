@@ -17,110 +17,162 @@ const INSTAGRAM_IMAGES = [
   'photo-1578985545062-69928b1d9587',
   'photo-1535254973040-607b474cb50d',
   'photo-1563729784474-d77dbb933a9e',
-  'photo-1578985545062-69928b1d9587',
   'photo-1557925923-cd4648e211a0',
   'photo-1588195538326-c5b1e9f80a1b',
+  'photo-1578985545062-69928b1d9587',
 ];
 
 const ORDER_STEPS = [
   {
     number: '01',
-    title: 'Choose your favourite',
+    title: 'Explore your options',
     description:
-      'Explore our cakes and desserts, or share your dream cake design with us.',
+      'Browse our collections or send us a reference photo of your desired cake.',
     icon: '♡',
   },
   {
     number: '02',
-    title: 'Make it yours',
+    title: 'Personalise your order',
     description:
-      'Select your flavour, size and design. We will confirm the price and details.',
+      'Choose your flavour, size and design. We will confirm the price and details.',
     icon: '✳',
   },
   {
     number: '03',
-    title: 'Let us bake',
+    title: 'Confirm and enjoy',
     description:
-      'Confirm your order and get ready for a delicious moment made just for you.',
+      'Once your order is confirmed, we will prepare your creation for the agreed date.',
     icon: '✧',
   },
 ];
 
-// 👇 Helper to shuffle the images randomly
-function shuffleArray(array: string[]) {
+function shuffleArray<T>(array: T[]): T[] {
   const arr = [...array];
+
   for (let i = arr.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [arr[i], arr[j]] = [arr[j], arr[i]];
   }
+
   return arr;
 }
 
 export default async function HomePage() {
   const sb = await createServerClient();
-  
-  // Fetch dynamic occasions and products in parallel
+
   const [occasionsRes, cakes, desserts] = await Promise.all([
-    sb.from('occasions').select('*').eq('is_active', true).order('sort_order'),
+    sb
+      .from('occasions')
+      .select('*')
+      .eq('is_active', true)
+      .order('sort_order'),
     getProducts('cake'),
     getProducts('dessert'),
   ]);
 
   const occasions = occasionsRes.data || [];
 
-  // 👇 Gather ALL images from every cake and dessert
   const allImages = [
-    ...cakes.flatMap((c) => c.images || []),
-    ...desserts.flatMap((d) => d.images || []),
-  ];
+    ...cakes.flatMap((cake) => cake.images || []),
+    ...desserts.flatMap((dessert) => dessert.images || []),
+  ].filter(Boolean);
 
-  // 👇 Shuffle all images and pick up to 10 for the slideshow
-  const shuffledImages = shuffleArray(allImages);
-  const heroSlides = shuffledImages.slice(0, 10).map((image) => ({
-    image,
-    title: 'Your moment. Your cake.',
-  }));
+  const heroSlides = shuffleArray(allImages)
+    .slice(0, 10)
+    .map((image) => ({
+      image,
+      title: 'Made for your moments.',
+    }));
 
   const featuredCakes = cakes.slice(0, 4);
   const featuredDesserts = desserts.slice(0, 6);
 
+  const categories = [
+    {
+      title: 'Celebration Cakes',
+      subtitle: 'For moments worth marking',
+      href: '/cakes',
+      symbol: '♡',
+    },
+    {
+      title: 'Dessert Collection',
+      subtitle: 'Your next favourite treat',
+      href: '/desserts',
+      symbol: '✧',
+    },
+    {
+      title: 'Custom Creations',
+      subtitle: 'Designed around your ideas',
+      href: '#custom-designs',
+      symbol: '✳',
+    },
+    {
+      title: 'Track Your Order',
+      subtitle: 'Check your order status',
+      href: '#track-order',
+      symbol: '↗',
+    },
+  ];
+
+  const serviceOptions = [
+    {
+      icon: '↗',
+      title: 'Chattogram delivery',
+      description:
+        'Delivery is available within Chattogram city. Charges will be confirmed when your order is finalised.',
+    },
+    {
+      icon: '⌖',
+      title: 'Pickup arrangements',
+      description:
+        'Discuss pickup options at Sanmar Ocean City, 2 No. Gate or Women College Mor, Chattogram.',
+    },
+    {
+      icon: '♡',
+      title: 'Here to help',
+      description:
+        'Need help choosing a flavour, planning a design or checking an order? Contact us on WhatsApp.',
+    },
+  ];
+
   return (
     <main className="overflow-hidden bg-cream text-ink">
-      {/* HERO */}
+
+      {/* HERO SECTION */}
       <section className="relative mx-auto max-w-7xl px-4 pb-14 pt-10 sm:px-6 md:pb-20 md:pt-16 lg:px-8">
-        {/* Decorative background */}
         <div
           aria-hidden="true"
           className="pointer-events-none absolute -right-24 top-0 h-72 w-72 rounded-full bg-burgundy/5 blur-3xl"
         />
+
         <div
           aria-hidden="true"
           className="pointer-events-none absolute -left-24 bottom-0 h-64 w-64 rounded-full bg-olive/10 blur-3xl"
         />
 
         <div className="relative grid items-center gap-10 md:grid-cols-2 md:gap-12 lg:gap-20">
-          {/* Hero content */}
+
           <div className="animate-[fadeInUp_0.7s_ease-out_both]">
             <div className="inline-flex items-center gap-2 rounded-full border border-burgundy/15 bg-white/70 px-4 py-2 text-xs font-medium tracking-wide text-burgundy shadow-sm backdrop-blur-sm sm:text-sm">
               <span className="h-2 w-2 animate-pulse rounded-full bg-burgundy" />
-              Baked with love in Chattogram
+              Baked fresh in Chattogram
             </div>
 
             <h1 className="mt-6 max-w-xl font-display text-5xl leading-[1.08] tracking-tight text-ink sm:text-6xl lg:text-7xl">
-              A little sweetness,
+              Small details,
               <span className="mt-2 block italic text-burgundy">
-                a lot of love.
+                beautifully baked.
               </span>
             </h1>
 
             <p className="mt-6 max-w-lg text-base leading-8 text-olive-dark sm:text-lg">
-              From dreamy custom cakes to irresistible desserts, we
-              create sweet moments that make every celebration
-              unforgettable.
+              From elegant celebration cakes to delightful desserts,
+              discover handcrafted creations designed to make your
+              occasions memorable.
             </p>
 
             <p className="mt-3 text-sm text-olive-dark/75">
-              Made to order · Minimum 24 hours advance notice
+              Freshly prepared · Made to order
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
@@ -128,7 +180,7 @@ export default async function HomePage() {
                 href="/cakes"
                 className="group inline-flex items-center justify-center gap-3 rounded-full bg-burgundy px-7 py-4 text-sm font-semibold text-cream shadow-lg shadow-burgundy/15 transition-all duration-300 hover:-translate-y-1 hover:bg-burgundy-dark hover:shadow-xl"
               >
-                Explore our cakes
+                Explore our collection
                 <span className="transition-transform duration-300 group-hover:translate-x-1">
                   →
                 </span>
@@ -141,20 +193,21 @@ export default async function HomePage() {
                 className="inline-flex items-center justify-center gap-2 rounded-full border border-olive/30 bg-white/60 px-7 py-4 text-sm font-semibold text-olive-dark transition-all duration-300 hover:-translate-y-1 hover:border-olive hover:bg-olive hover:text-cream"
               >
                 <span aria-hidden="true">↗</span>
-                Order on WhatsApp
+                Order via WhatsApp
               </a>
             </div>
 
-            {/* Quick highlights */}
             <div className="mt-10 flex flex-wrap gap-x-6 gap-y-3 border-t border-olive/15 pt-6 text-xs text-olive-dark sm:text-sm">
               <span className="flex items-center gap-2">
                 <span className="text-burgundy">✦</span>
-                Custom designs
+                Custom-made designs
               </span>
+
               <span className="flex items-center gap-2">
                 <span className="text-burgundy">✦</span>
-                Freshly made
+                Freshly prepared
               </span>
+
               <span className="flex items-center gap-2">
                 <span className="text-burgundy">✦</span>
                 Made for your moments
@@ -162,7 +215,6 @@ export default async function HomePage() {
             </div>
           </div>
 
-          {/* Dynamic hero image carousel */}
           <HeroSlider slides={heroSlides} />
         </div>
       </section>
@@ -170,32 +222,7 @@ export default async function HomePage() {
       {/* QUICK CATEGORY LINKS */}
       <section className="border-y border-olive/10 bg-white/50">
         <div className="mx-auto grid max-w-7xl grid-cols-2 divide-x divide-y divide-olive/10 px-4 sm:px-6 md:grid-cols-4 md:divide-y-0 lg:px-8">
-          {[
-            {
-              title: 'Celebration Cakes',
-              subtitle: 'Make it memorable',
-              href: '/cakes',
-              symbol: '♡',
-            },
-            {
-              title: 'Dessert Collection',
-              subtitle: 'Little bites of joy',
-              href: '/desserts',
-              symbol: '✧',
-            },
-            {
-              title: 'Custom Designs',
-              subtitle: 'Your idea, our craft',
-              href: '#custom-designs',
-              symbol: '✳',
-            },
-            {
-              title: 'Track Your Order',
-              subtitle: 'Stay in the loop',
-              href: '#track-order',
-              symbol: '↗',
-            },
-          ].map((item) => (
+          {categories.map((item) => (
             <Link
               key={item.title}
               href={item.href}
@@ -204,10 +231,12 @@ export default async function HomePage() {
               <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-burgundy/10 font-display text-2xl text-burgundy transition-all duration-300 group-hover:rotate-6 group-hover:bg-burgundy group-hover:text-cream">
                 {item.symbol}
               </span>
+
               <span>
                 <span className="block text-sm font-semibold text-ink">
                   {item.title}
                 </span>
+
                 <span className="mt-1 block text-xs text-olive-dark/75">
                   {item.subtitle}
                 </span>
@@ -217,65 +246,104 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* SHOP BY OCCASION (Dynamic from Database) */}
-      <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 md:py-18 lg:px-8">
+      {/* SHOP BY OCCASION */}
+      <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 md:py-20 lg:px-8">
         <div className="mb-8 text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.25em] text-burgundy">
-            Made for every moment
+            Celebrate in style
           </p>
+
           <h2 className="mt-3 font-display text-3xl text-ink sm:text-4xl md:text-5xl">
-            What are we celebrating?
+            Every occasion has its cake
           </h2>
+
           <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-olive-dark sm:text-base">
-            From little surprises to milestone celebrations, find a cake for your moment.
+            From birthdays and anniversaries to thoughtful surprises,
+            find a design that suits your celebration.
           </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-          {occasions.map((occasion, index) => (
-            <Link
-              key={occasion.slug}
-              href={`/occasions/${occasion.slug}`}
-              className="group relative isolate overflow-hidden rounded-3xl border border-olive/10 bg-white/70 p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-burgundy/20 hover:shadow-xl hover:shadow-olive/10 sm:p-7"
-              style={{ animationDelay: `${index * 100}ms` }}
-            >
-              {/* Background Image if uploaded in Admin */}
-              {occasion.image_url && (
-                <>
-                  <Image
-                    src={occasion.image_url}
-                    alt={occasion.title}
-                    fill
-                    className="object-cover -z-20 transition-transform duration-700 group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/10 -z-10" />
-                </>
-              )}
+        {occasions.length > 0 ? (
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            {occasions.map((occasion, index) => (
+              <Link
+                key={occasion.slug}
+                href={`/occasions/${occasion.slug}`}
+                className="group relative isolate overflow-hidden rounded-3xl border border-olive/10 bg-white/70 p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-burgundy/20 hover:shadow-xl hover:shadow-olive/10 sm:p-7"
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                {occasion.image_url && (
+                  <>
+                    <Image
+                      src={occasion.image_url}
+                      alt={occasion.title}
+                      fill
+                      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                      className="-z-20 object-cover transition-transform duration-700 group-hover:scale-105"
+                    />
 
-              {/* Fallback Symbol Background */}
-              {!occasion.image_url && (
-                <span className="absolute -right-3 -top-5 -z-10 text-7xl text-burgundy/5 transition-transform duration-500 group-hover:rotate-12 group-hover:scale-125">
+                    <div className="absolute inset-0 -z-10 bg-gradient-to-t from-black/80 via-black/40 to-black/10" />
+                  </>
+                )}
+
+                {!occasion.image_url && (
+                  <span className="absolute -right-3 -top-5 -z-10 text-7xl text-burgundy/5 transition-transform duration-500 group-hover:rotate-12 group-hover:scale-125">
+                    {occasion.symbol}
+                  </span>
+                )}
+
+                <span className={`flex h-11 w-11 items-center justify-center rounded-2xl text-xl transition-all duration-300 ${
+                  occasion.image_url
+                    ? 'bg-white/20 text-white backdrop-blur-sm group-hover:bg-white group-hover:text-burgundy'
+                    : 'bg-burgundy/10 text-burgundy group-hover:bg-burgundy group-hover:text-cream'
+                }`}>
                   {occasion.symbol}
                 </span>
-              )}
 
-              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-burgundy/10 text-xl text-burgundy transition-all duration-300 group-hover:bg-burgundy group-hover:text-cream">
-                {occasion.symbol}
-              </span>
-              
-              <h3 className={`mt-5 font-display text-xl sm:text-2xl ${occasion.image_url ? 'text-white' : 'text-ink'}`}>
-                {occasion.title}
-              </h3>
-              <p className={`mt-2 text-sm ${occasion.image_url ? 'text-white/80' : 'text-olive-dark/75'}`}>
-                {occasion.subtitle}
-              </p>
-              
-              <span className={`mt-5 inline-flex items-center gap-2 text-sm font-semibold transition-all group-hover:gap-3 ${occasion.image_url ? 'text-white' : 'text-burgundy'}`}>
-                Explore cakes <span aria-hidden="true">→</span>
-              </span>
+                <h3
+                  className={`mt-5 font-display text-xl sm:text-2xl ${
+                    occasion.image_url ? 'text-white' : 'text-ink'
+                  }`}
+                >
+                  {occasion.title}
+                </h3>
+
+                <p
+                  className={`mt-2 text-sm ${
+                    occasion.image_url
+                      ? 'text-white/80'
+                      : 'text-olive-dark/75'
+                  }`}
+                >
+                  {occasion.subtitle}
+                </p>
+
+                <span
+                  className={`mt-5 inline-flex items-center gap-2 text-sm font-semibold transition-all group-hover:gap-3 ${
+                    occasion.image_url ? 'text-white' : 'text-burgundy'
+                  }`}
+                >
+                  Discover designs <span aria-hidden="true">→</span>
+                </span>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-3xl border border-dashed border-olive/20 bg-white/50 px-5 py-12 text-center">
+            <p className="font-display text-2xl text-ink">
+              Find your perfect occasion cake
+            </p>
+            <p className="mt-2 text-sm text-olive-dark">
+              Browse our cake collection to explore available designs.
+            </p>
+            <Link
+              href="/cakes"
+              className="mt-5 inline-flex rounded-full bg-burgundy px-6 py-3 text-sm font-semibold text-cream transition hover:bg-burgundy-dark"
+            >
+              Browse cakes →
             </Link>
-          ))}
-        </div>
+          </div>
+        )}
       </section>
 
       {/* FEATURED CAKES */}
@@ -283,14 +351,17 @@ export default async function HomePage() {
         <div className="mb-8 flex items-end justify-between gap-4 md:mb-10">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.25em] text-burgundy">
-              Baked for your happiness
+              Crafted for the occasion
             </p>
+
             <h2 className="mt-3 font-display text-3xl text-ink sm:text-4xl md:text-5xl">
-              Cakes to fall in love with
+              Meet your next favourite cake
             </h2>
+
             <p className="mt-3 max-w-xl text-sm leading-7 text-olive-dark sm:text-base">
-              Thoughtfully crafted cakes for birthdays, celebrations
-              and all the little moments worth celebrating.
+              Explore beautifully finished cakes with delicious
+              flavours and designs suited to birthdays, milestones
+              and gatherings.
             </p>
           </div>
 
@@ -298,7 +369,7 @@ export default async function HomePage() {
             href="/cakes"
             className="group hidden shrink-0 items-center gap-2 pb-1 text-sm font-semibold text-burgundy transition-all hover:gap-3 sm:inline-flex"
           >
-            View all cakes <span>→</span>
+            Browse all cakes <span>→</span>
           </Link>
         </div>
 
@@ -316,10 +387,11 @@ export default async function HomePage() {
         ) : (
           <div className="rounded-3xl border border-dashed border-olive/20 bg-white/50 px-5 py-12 text-center">
             <p className="font-display text-2xl text-ink">
-              Something sweet is coming
+              Something wonderful is in the making
             </p>
+
             <p className="mt-2 text-sm text-olive-dark">
-              Our cake collection will appear here soon.
+              Our latest cake creations will be available here soon.
             </p>
           </div>
         )}
@@ -328,17 +400,21 @@ export default async function HomePage() {
           href="/cakes"
           className="mt-7 inline-flex w-full items-center justify-center gap-2 rounded-full border border-burgundy/25 px-5 py-3 text-sm font-semibold text-burgundy transition-all hover:bg-burgundy hover:text-cream sm:hidden"
         >
-          Explore all cakes <span>→</span>
+          Explore our cakes <span>→</span>
         </Link>
       </section>
 
-      {/* CUSTOM CAKE CALLOUT */}
-      <section id="custom-designs" className="scroll-mt-24 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      {/* CUSTOM CAKE SECTION */}
+      <section
+        id="custom-designs"
+        className="mx-auto scroll-mt-24 max-w-7xl px-4 sm:px-6 lg:px-8"
+      >
         <div className="group relative overflow-hidden rounded-[2rem] bg-burgundy px-6 py-10 text-cream sm:px-10 sm:py-14 lg:px-16 lg:py-16">
           <div
             aria-hidden="true"
             className="absolute -right-12 -top-20 h-64 w-64 rounded-full border border-white/10 transition-transform duration-700 group-hover:scale-110 sm:h-80 sm:w-80"
           />
+
           <div
             aria-hidden="true"
             className="absolute -bottom-28 right-1/4 h-64 w-64 rounded-full bg-white/5 blur-2xl"
@@ -347,18 +423,20 @@ export default async function HomePage() {
           <div className="relative grid items-center gap-8 md:grid-cols-[1fr_auto] md:gap-12">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.25em] text-cream/70">
-                Dream it. We bake it.
+                Your vision, our craftsmanship
               </p>
+
               <h2 className="mt-4 max-w-2xl font-display text-3xl leading-tight sm:text-4xl md:text-5xl">
-                Have a cake design in mind?
+                Imagine your perfect cake.
                 <span className="block italic text-cream/75">
-                  Let&apos;s make it yours.
+                  We&apos;ll bring it to life.
                 </span>
               </h2>
+
               <p className="mt-4 max-w-xl text-sm leading-7 text-cream/80 sm:text-base">
-                Share your inspiration, choose your flavour and tell
-                us about your celebration. We&apos;ll help you bring
-                your dream cake to life.
+                Share your inspiration, choose your preferred flavour
+                and tell us about your occasion. We&apos;ll work with
+                you to create a cake that reflects your vision.
               </p>
             </div>
 
@@ -368,7 +446,7 @@ export default async function HomePage() {
               rel="noopener noreferrer"
               className="group/button inline-flex w-fit items-center justify-center gap-3 rounded-full bg-cream px-6 py-4 text-sm font-semibold text-burgundy transition-all duration-300 hover:-translate-y-1 hover:bg-white hover:shadow-xl"
             >
-              Discuss your design
+              Create your custom cake
               <span className="transition-transform group-hover/button:translate-x-1">
                 →
               </span>
@@ -377,19 +455,22 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* DESSERTS */}
+      {/* FEATURED DESSERTS */}
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-20 lg:px-8">
         <div className="mb-8 flex items-end justify-between gap-4 md:mb-10">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.25em] text-burgundy">
-              A little treat goes a long way
+              A collection of irresistible treats
             </p>
+
             <h2 className="mt-3 font-display text-3xl text-ink sm:text-4xl md:text-5xl">
-              Something sweet
+              Beyond the cake
             </h2>
+
             <p className="mt-3 max-w-xl text-sm leading-7 text-olive-dark sm:text-base">
-              Discover delightful desserts for your celebrations
-              or your everyday sweet cravings.
+              From creamy indulgences to bite-sized delights,
+              explore desserts made for sharing, gifting or enjoying
+              yourself.
             </p>
           </div>
 
@@ -397,7 +478,7 @@ export default async function HomePage() {
             href="/desserts"
             className="group hidden shrink-0 items-center gap-2 pb-1 text-sm font-semibold text-burgundy transition-all hover:gap-3 sm:inline-flex"
           >
-            All desserts <span>→</span>
+            Browse desserts <span>→</span>
           </Link>
         </div>
 
@@ -415,10 +496,11 @@ export default async function HomePage() {
         ) : (
           <div className="rounded-3xl border border-dashed border-olive/20 bg-white/50 px-5 py-12 text-center">
             <p className="font-display text-2xl text-ink">
-              Sweet treats are on their way
+              Delicious treats are coming soon
             </p>
+
             <p className="mt-2 text-sm text-olive-dark">
-              Our dessert collection will appear here soon.
+              Check back to discover our dessert selection.
             </p>
           </div>
         )}
@@ -427,11 +509,11 @@ export default async function HomePage() {
           href="/desserts"
           className="mt-7 inline-flex w-full items-center justify-center gap-2 rounded-full border border-burgundy/25 px-5 py-3 text-sm font-semibold text-burgundy transition-all hover:bg-burgundy hover:text-cream sm:hidden"
         >
-          Discover all desserts <span>→</span>
+          Explore all desserts <span>→</span>
         </Link>
       </section>
 
-      {/* RECENTLY VIEWED */}
+      {/* RECENTLY VIEWED PRODUCTS */}
       <RecentlyViewed />
 
       {/* HOW TO ORDER */}
@@ -444,14 +526,16 @@ export default async function HomePage() {
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-2xl text-center">
             <p className="text-xs font-semibold uppercase tracking-[0.25em] text-cream/65">
-              Simple, personal, delicious
+              Three simple steps
             </p>
+
             <h2 className="mt-3 font-display text-3xl sm:text-4xl md:text-5xl">
-              Your sweet moment starts here
+              From your idea to your table
             </h2>
+
             <p className="mt-4 text-sm leading-7 text-cream/75 sm:text-base">
-              Ordering your favourite cake is easy. Here&apos;s how
-              we turn your idea into something special.
+              Ordering is simple. Choose a favourite, personalise
+              your selection and let us take care of the baking.
             </p>
           </div>
 
@@ -465,6 +549,7 @@ export default async function HomePage() {
                   <span className="font-display text-4xl text-cream/25">
                     {step.number}
                   </span>
+
                   <span className="flex h-12 w-12 items-center justify-center rounded-full bg-cream text-2xl text-olive transition-transform duration-300 group-hover:rotate-12">
                     {step.icon}
                   </span>
@@ -473,6 +558,7 @@ export default async function HomePage() {
                 <h3 className="mt-7 font-display text-2xl">
                   {step.title}
                 </h3>
+
                 <p className="mt-3 text-sm leading-7 text-cream/75">
                   {step.description}
                 </p>
@@ -487,7 +573,7 @@ export default async function HomePage() {
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center gap-3 rounded-full bg-cream px-7 py-4 text-sm font-semibold text-olive transition-all duration-300 hover:-translate-y-1 hover:bg-white hover:shadow-lg"
             >
-              Start your order <span>→</span>
+              Place your order <span>→</span>
             </a>
           </div>
         </div>
@@ -502,14 +588,16 @@ export default async function HomePage() {
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-20 lg:px-8">
         <div className="mb-8 flex flex-col items-center text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.25em] text-burgundy">
-            Follow the sweetness
+            Fresh from our kitchen
           </p>
+
           <h2 className="mt-3 font-display text-3xl text-ink sm:text-4xl md:text-5xl">
-            A peek into our world
+            A closer look at our creations
           </h2>
+
           <p className="mt-3 max-w-lg text-sm leading-7 text-olive-dark">
-            Discover our creations, behind-the-scenes moments and
-            the little details that make every cake special.
+            Browse our cake designs, explore new flavours and get
+            inspiration for your next celebration.
           </p>
 
           <a
@@ -552,43 +640,25 @@ export default async function HomePage() {
         </div>
 
         <p className="mt-4 text-center text-xs text-olive-dark/65">
-          Follow us for more sweet inspiration.
+          Follow along for new designs and behind-the-scenes updates.
         </p>
       </section>
 
-      {/* DELIVERY, PICKUP & SUPPORT */}
+      {/* DELIVERY, PICKUP AND SUPPORT */}
       <section className="border-t border-olive/10 bg-white/35 py-16 md:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mb-10 text-center">
             <p className="text-xs font-semibold uppercase tracking-[0.25em] text-burgundy">
-              Here for your celebrations
+              Convenient ordering
             </p>
+
             <h2 className="mt-3 font-display text-3xl text-ink sm:text-4xl">
-              Made with care, delivered with love
+              From our kitchen to your celebration
             </h2>
           </div>
 
           <div className="grid gap-5 md:grid-cols-3">
-            {[
-              {
-                icon: '↗',
-                title: 'City delivery',
-                description:
-                  'We deliver within Chattogram city. Delivery charges are confirmed with your order.',
-              },
-              {
-                icon: '⌖',
-                title: 'Pickup options',
-                description:
-                  'Pickup arrangements can be discussed for Sanmar Ocean City, 2 No Gate or Women College Mor, Chattogram.',
-              },
-              {
-                icon: '♡',
-                title: 'Personal support',
-                description:
-                  'Have questions about flavours, designs or your order? Message us on WhatsApp.',
-              },
-            ].map((item) => (
+            {serviceOptions.map((item) => (
               <div
                 key={item.title}
                 className="group rounded-3xl border border-olive/10 bg-white/75 p-7 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-burgundy/20 hover:shadow-xl hover:shadow-olive/5 sm:p-8"
@@ -596,9 +666,11 @@ export default async function HomePage() {
                 <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-burgundy/10 font-display text-3xl text-burgundy transition-all duration-300 group-hover:bg-burgundy group-hover:text-cream">
                   {item.icon}
                 </span>
+
                 <h3 className="mt-5 font-display text-2xl text-ink">
                   {item.title}
                 </h3>
+
                 <p className="mt-3 text-sm leading-7 text-olive-dark">
                   {item.description}
                 </p>
@@ -618,12 +690,13 @@ export default async function HomePage() {
 
           <div className="relative">
             <span className="text-3xl text-burgundy">✧</span>
+
             <h2 className="mx-auto mt-4 max-w-2xl font-display text-3xl leading-tight text-ink sm:text-4xl md:text-5xl">
-              Every celebration deserves something sweet.
+              Make your next celebration unforgettable.
             </h2>
+
             <p className="mx-auto mt-4 max-w-lg text-sm leading-7 text-olive-dark sm:text-base">
-              Let&apos;s create something delicious for your next
-              special moment.
+              Find the perfect cake or dessert to complete your occasion.
             </p>
 
             <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
@@ -631,7 +704,7 @@ export default async function HomePage() {
                 href="/cakes"
                 className="inline-flex items-center justify-center gap-2 rounded-full bg-burgundy px-7 py-4 text-sm font-semibold text-cream transition-all duration-300 hover:-translate-y-1 hover:bg-burgundy-dark hover:shadow-lg"
               >
-                Find your cake <span>→</span>
+                Explore our cakes <span>→</span>
               </Link>
 
               <a
@@ -640,7 +713,7 @@ export default async function HomePage() {
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 rounded-full border border-olive/25 bg-white/70 px-7 py-4 text-sm font-semibold text-olive-dark transition-all duration-300 hover:-translate-y-1 hover:bg-olive hover:text-cream"
               >
-                Talk to us <span>↗</span>
+                Get in touch <span>↗</span>
               </a>
             </div>
           </div>
