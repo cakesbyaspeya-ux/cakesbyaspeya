@@ -154,14 +154,14 @@ export default async function HomePage() {
 
           <div className="animate-[fadeInUp_0.7s_ease-out_both]">
             <div className="inline-flex items-center gap-2 rounded-full border border-burgundy/15 bg-white/70 px-4 py-2 text-xs font-medium tracking-wide text-burgundy shadow-sm backdrop-blur-sm sm:text-sm">
-              <span className="h-2 w-2 animate-pulse rounded-full bg-burgundy" />
-              Baked fresh in Chattogram
-            </div>
+             <span className="h-2 w-2 animate-pulse rounded-full bg-burgundy" />
+              Custom Cakes & Delightful Desserts
+             </div>
 
             <h1 className="mt-6 max-w-xl font-display text-5xl leading-[1.08] tracking-tight text-ink sm:text-6xl lg:text-7xl">
-              Small details,
+              A little sweetness,
               <span className="mt-2 block italic text-burgundy">
-                beautifully baked.
+                a lot of love.
               </span>
             </h1>
 
