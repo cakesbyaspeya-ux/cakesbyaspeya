@@ -3,7 +3,7 @@ import { getProducts } from '@/lib/products';
 import { ProductCard } from '@/components/product/ProductCard';
 import { TrackOrderWidget } from '@/components/home/TrackOrderWidget';
 import { RecentlyViewed } from '@/components/product/RecentlyViewed';
-import { AnnouncementBar } from '@/components/home/AnnouncementBar';
+import { AnnouncementBar } from '@/components/home/AnnouncementBar'; 
 import { HeroSlider } from '@/components/home/HeroSlider';
 
 const WHATSAPP_URL =
@@ -162,7 +162,7 @@ export default async function HomePage() {
             {
               title: 'Custom Designs',
               subtitle: 'Your idea, our craft',
-              href: '/cakes',
+              href: '#custom-designs', // 👈 Changed to scroll to the red banner
               symbol: '✳',
             },
             {
@@ -207,7 +207,7 @@ export default async function HomePage() {
           </p>
         </div>
 
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
           {[
             { title: 'Birthdays', subtitle: 'Make a wish', symbol: '🎂', slug: 'birthdays' },
             { title: 'Anniversaries', subtitle: 'Celebrate together', symbol: '♡', slug: 'anniversaries' },
@@ -216,7 +216,7 @@ export default async function HomePage() {
           ].map((occasion, index) => (
             <Link
               key={occasion.title}
-              href={`/occasions/${occasion.slug}`} // 👈 Dynamically routes to the new pages
+              href={`/occasions/${occasion.slug}`} 
               className="group relative isolate overflow-hidden rounded-3xl border border-olive/10 bg-white/70 p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-burgundy/20 hover:shadow-xl hover:shadow-olive/10 sm:p-7"
               style={{ animationDelay: `${index * 100}ms` }}
             >
@@ -293,7 +293,8 @@ export default async function HomePage() {
       </section>
 
       {/* CUSTOM CAKE CALLOUT */}
-      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      {/* 👇 Added id="custom-designs" and scroll-mt-24 */}
+      <section id="custom-designs" className="scroll-mt-24 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="group relative overflow-hidden rounded-[2rem] bg-burgundy px-6 py-10 text-cream sm:px-10 sm:py-14 lg:px-16 lg:py-16">
           <div
             aria-hidden="true"
