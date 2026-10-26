@@ -6,6 +6,7 @@ import { ImageSlideshow } from './ImageSlideshow';
 import { useCart } from '@/components/cart/CartProvider';
 import { ProductCard, type ProductCardData } from './ProductCard'; 
 import { createClient } from '@/lib/supabase/client';
+import { DesignSelector } from './DesignSelector'; // 👈 Use new component
 
 const PKR = (n: number) => '৳' + n.toLocaleString('en-BD');
 
@@ -123,12 +124,11 @@ export function ProductDetailClient({
         
         {/* LEFT: Image Gallery & Thumbnails */}
         <div className="space-y-4">
-          <ImageSlideshow 
-            images={product.images.map((img: any) => img.url)} 
-            alt={product.name} 
-            activeIndex={activeImageIndex}
-            onIndexChange={setActiveImageIndex}
-          />
+          <DesignSelector 
+           images={product.images} 
+            activeIndex={activeImageIndex} 
+            onIndexChange={setActiveImageIndex} 
+           />
           
           {product.images.length > 1 && (
             <div className="grid grid-cols-4 gap-2">

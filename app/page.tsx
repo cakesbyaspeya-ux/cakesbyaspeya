@@ -3,7 +3,7 @@ import { getProducts } from '@/lib/products';
 import { ProductCard } from '@/components/product/ProductCard';
 import { TrackOrderWidget } from '@/components/home/TrackOrderWidget';
 import { RecentlyViewed } from '@/components/product/RecentlyViewed';
-import { AnnouncementBar } from '@/components/home/AnnouncementBar';
+import { AnnouncementBar } from '@/components\home\AnnouncementBar';
 import { HeroSlider } from '@/components/home/HeroSlider';
 
 const WHATSAPP_URL =
@@ -207,16 +207,16 @@ export default async function HomePage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
           {[
-            { title: 'Birthdays', subtitle: 'Make a wish', symbol: '🎂' },
-            { title: 'Anniversaries', subtitle: 'Celebrate together', symbol: '♡' },
-            { title: 'Kids’ Parties', subtitle: 'Big smiles, sweet bites', symbol: '✦' },
-            { title: 'Just Because', subtitle: 'A little everyday joy', symbol: '✧' },
+            { title: 'Birthdays', subtitle: 'Make a wish', symbol: '🎂', slug: 'birthdays' },
+            { title: 'Anniversaries', subtitle: 'Celebrate together', symbol: '♡', slug: 'anniversaries' },
+            { title: 'Kids’ Parties', subtitle: 'Big smiles, sweet bites', symbol: '✦', slug: 'kids-parties' },
+            { title: 'Just Because', subtitle: 'A little everyday joy', symbol: '✧', slug: 'just-because' },
           ].map((occasion, index) => (
             <Link
               key={occasion.title}
-              href="/cakes"
+              href={`/occasions/${occasion.slug}`} // 👈 Dynamically routes to the new pages
               className="group relative isolate overflow-hidden rounded-3xl border border-olive/10 bg-white/70 p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-burgundy/20 hover:shadow-xl hover:shadow-olive/10 sm:p-7"
               style={{ animationDelay: `${index * 100}ms` }}
             >
