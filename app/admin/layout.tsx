@@ -3,8 +3,9 @@ import Link from 'next/link';
 const NAV_ITEMS = [
   { href: '/admin', label: 'Dashboard', icon: '📊' },
   { href: '/admin/orders', label: 'Orders', icon: '📋' },
-  { href: '/admin/calendar', label: 'Calendar', icon: '📅' }, // <-- Added
+  { href: '/admin/calendar', label: 'Calendar', icon: '📅' },
   { href: '/admin/products', label: 'Products', icon: '🎂' },
+  { href: '/admin/occasions', label: 'Occasions', icon: '✨' }, // 👈 Add this
   { href: '/admin/settings', label: 'Settings', icon: '⚙️' },
 ];
 

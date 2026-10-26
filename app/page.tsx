@@ -1,10 +1,11 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { getProducts } from '@/lib/products';
 import { ProductCard } from '@/components/product/ProductCard';
 import { TrackOrderWidget } from '@/components/home/TrackOrderWidget';
 import { RecentlyViewed } from '@/components/product/RecentlyViewed';
-import { AnnouncementBar } from '@/components/home/AnnouncementBar'; 
 import { HeroSlider } from '@/components/home/HeroSlider';
+import { createServerClient } from '@/lib/supabase/server';
 
 const WHATSAPP_URL =
   'https://wa.me/8801519409555?text=Hi%20Cakes%20by%20Aspeya!%20I%20would%20like%20to%20place%20an%20order.';
@@ -46,10 +47,16 @@ const ORDER_STEPS = [
 ];
 
 export default async function HomePage() {
-  const [cakes, desserts] = await Promise.all([
+  const sb = await createServerClient();
+  
+  // Fetch dynamic occasions and products in parallel
+  const [occasionsRes, cakes, desserts] = await Promise.all([
+    sb.from('occasions').select('*').eq('is_active', true).order('sort_order'),
     getProducts('cake'),
     getProducts('dessert'),
   ]);
+
+  const occasions = occasionsRes.data || [];
 
   const heroSlides = cakes
     .filter((cake) => cake.images?.length > 0)
@@ -61,7 +68,6 @@ export default async function HomePage() {
 
   return (
     <main className="overflow-hidden bg-cream text-ink">
-      <AnnouncementBar />
       {/* HERO */}
       <section className="relative mx-auto max-w-7xl px-4 pb-14 pt-10 sm:px-6 md:pb-20 md:pt-16 lg:px-8">
         {/* Decorative background */}
@@ -162,7 +168,7 @@ export default async function HomePage() {
             {
               title: 'Custom Designs',
               subtitle: 'Your idea, our craft',
-              href: '#custom-designs', // 👈 Changed to scroll to the red banner
+              href: '#custom-designs',
               symbol: '✳',
             },
             {
@@ -193,7 +199,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* SHOP BY OCCASION */}
+      {/* SHOP BY OCCASION (Dynamic from Database) */}
       <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 md:py-18 lg:px-8">
         <div className="mb-8 text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.25em] text-burgundy">
@@ -208,29 +214,45 @@ export default async function HomePage() {
         </div>
 
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-          {[
-            { title: 'Birthdays', subtitle: 'Make a wish', symbol: '🎂', slug: 'birthdays' },
-            { title: 'Anniversaries', subtitle: 'Celebrate together', symbol: '♡', slug: 'anniversaries' },
-            { title: 'Kids’ Parties', subtitle: 'Big smiles, sweet bites', symbol: '✦', slug: 'kids-parties' },
-            { title: 'Just Because', subtitle: 'A little everyday joy', symbol: '✧', slug: 'just-because' },
-          ].map((occasion, index) => (
+          {occasions.map((occasion, index) => (
             <Link
-              key={occasion.title}
-              href={`/occasions/${occasion.slug}`} 
+              key={occasion.slug}
+              href={`/occasions/${occasion.slug}`}
               className="group relative isolate overflow-hidden rounded-3xl border border-olive/10 bg-white/70 p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-burgundy/20 hover:shadow-xl hover:shadow-olive/10 sm:p-7"
               style={{ animationDelay: `${index * 100}ms` }}
             >
-              <span className="absolute -right-3 -top-5 -z-10 text-7xl text-burgundy/5 transition-transform duration-500 group-hover:rotate-12 group-hover:scale-125">
-                {occasion.symbol}
-              </span>
+              {/* Background Image if uploaded in Admin */}
+              {occasion.image_url && (
+                <>
+                  <Image
+                    src={occasion.image_url}
+                    alt={occasion.title}
+                    fill
+                    className="object-cover -z-20 transition-transform duration-700 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/10 -z-10" />
+                </>
+              )}
+
+              {/* Fallback Symbol Background */}
+              {!occasion.image_url && (
+                <span className="absolute -right-3 -top-5 -z-10 text-7xl text-burgundy/5 transition-transform duration-500 group-hover:rotate-12 group-hover:scale-125">
+                  {occasion.symbol}
+                </span>
+              )}
+
               <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-burgundy/10 text-xl text-burgundy transition-all duration-300 group-hover:bg-burgundy group-hover:text-cream">
                 {occasion.symbol}
               </span>
-              <h3 className="mt-5 font-display text-xl text-ink sm:text-2xl">
+              
+              <h3 className={`mt-5 font-display text-xl sm:text-2xl ${occasion.image_url ? 'text-white' : 'text-ink'}`}>
                 {occasion.title}
               </h3>
-              <p className="mt-2 text-sm text-olive-dark/75">{occasion.subtitle}</p>
-              <span className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-burgundy transition-all group-hover:gap-3">
+              <p className={`mt-2 text-sm ${occasion.image_url ? 'text-white/80' : 'text-olive-dark/75'}`}>
+                {occasion.subtitle}
+              </p>
+              
+              <span className={`mt-5 inline-flex items-center gap-2 text-sm font-semibold transition-all group-hover:gap-3 ${occasion.image_url ? 'text-white' : 'text-burgundy'}`}>
                 Explore cakes <span aria-hidden="true">→</span>
               </span>
             </Link>
@@ -293,7 +315,6 @@ export default async function HomePage() {
       </section>
 
       {/* CUSTOM CAKE CALLOUT */}
-      {/* 👇 Added id="custom-designs" and scroll-mt-24 */}
       <section id="custom-designs" className="scroll-mt-24 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="group relative overflow-hidden rounded-[2rem] bg-burgundy px-6 py-10 text-cream sm:px-10 sm:py-14 lg:px-16 lg:py-16">
           <div

@@ -1,34 +1,19 @@
-'use client';
+import { createServerClient } from '@/lib/supabase/server';
+import { AnnouncementBarClient } from './AnnouncementBarClient';
 
-import { useEffect, useState } from 'react';
+export async function AnnouncementBar() {
+  const sb = await createServerClient();
+  
+  // Fetch the admin settings
+  const { data } = await sb
+    .from('settings')
+    .select('key, value')
+    .in('key', ['notice_banner', 'ordering_open']);
 
-const MESSAGES = [
-  'Handcrafted cakes, made just for your moments',
-  'Custom designs made with care in Chattogram',
-  'Choose your flavour, share your vision, let us bake',
-];
+  const settings = Object.fromEntries((data ?? []).map((r) => [r.key, r.value]));
+  
+  const adminNotice = settings.notice_banner;
+  const isOpen = settings.ordering_open === true || settings.ordering_open === 'true' || settings.ordering_open === undefined;
 
-export function AnnouncementBar() {
-  const [active, setActive] = useState(0);
-
-  useEffect(() => {
-    const interval = window.setInterval(() => {
-      setActive((current) => (current + 1) % MESSAGES.length);
-    }, 4500);
-
-    return () => window.clearInterval(interval);
-  }, []);
-
-  return (
-    <div
-      aria-live="polite"
-      className="relative flex min-h-10 items-center justify-center overflow-hidden bg-olive px-4 py-2 text-center text-xs font-medium tracking-wide text-cream sm:text-sm"
-    >
-      <span key={active} className="animate-[fadeInUp_0.45s_ease-out_both]">
-        <span aria-hidden="true" className="mr-2 text-cream/70">✦</span>
-        {MESSAGES[active]}
-        <span aria-hidden="true" className="ml-2 text-cream/70">✦</span>
-      </span>
-    </div>
-  );
+  return <AnnouncementBarClient adminNotice={adminNotice} isOpen={isOpen} />;
 }

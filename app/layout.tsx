@@ -5,8 +5,7 @@ import { CartProvider } from '@/components/cart/CartProvider';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { FloatingWhatsAppButton } from '@/components/layout/FloatingWhatsAppButton';
-import { NoticeBanner } from '@/components/layout/NoticeBanner';
-import { PwaInstallPrompt } from '@/components/layout/PwaInstallPrompt';
+import { AnnouncementBar } from '@/components/home/AnnouncementBar';
 
 // ── Fonts ────────────────────────────────────────────────
 const playfair = Playfair_Display({
@@ -76,13 +75,11 @@ export default function RootLayout({
       className={`${playfair.variable} ${inter.variable} ${caveat.variable} bg-cream`}
       style={{ colorScheme: 'light' }}
     >
-      <body className="bg-cream text-ink font-body antialiased">
+            <body className="bg-cream text-ink font-body antialiased">
         <CartProvider>
-          <NoticeBanner />
           <Navbar />
           <main className="min-h-[calc(100vh-200px)]">{children}</main>
           <Footer />
-          <PwaInstallPrompt />
           <FloatingWhatsAppButton />
         </CartProvider>
       </body>

@@ -1,17 +1,20 @@
 import { createServerClient } from '@/lib/supabase/server';
 import { ProductCard } from '@/components/product/ProductCard';
-import { notFound } from 'next/navigation';
+import Image from 'next/image';
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  return {
-    title: `Cakes for ${slug.charAt(0).toUpperCase() + slug.slice(1)}`,
-  };
+  const sb = await createServerClient();
+  const { data } = await sb.from('occasions').select('title').eq('slug', slug).single();
+  return { title: data?.title ? `Cakes for ${data.title}` : 'Occasion' };
 }
 
 export default async function OccasionPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const sb = await createServerClient();
+
+  // Fetch the occasion details
+  const { data: occasion } = await sb.from('occasions').select('*').eq('slug', slug).single();
 
   // Fetch products matching this occasion
   const { data: products, error } = await sb
@@ -37,28 +40,54 @@ export default async function OccasionPage({ params }: { params: Promise<{ slug:
     return { slug: p.slug, name: p.name, product_type: p.product_type, image_layout: p.image_layout, images, from_price, flavours };
   });
 
-  const title = slug.charAt(0).toUpperCase() + slug.slice(1).replace('-', ' ');
+  const title = occasion?.title || slug.charAt(0).toUpperCase() + slug.slice(1).replace('-', ' ');
+  const subtitle = occasion?.subtitle || `Find the perfect cake to make your ${title.toLowerCase()} unforgettable.`;
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-16">
-      <div className="text-center mb-12">
-        <h1 className="font-display text-4xl md:text-5xl text-ink mb-4">Cakes for {title}</h1>
-        <p className="text-olive-dark max-w-xl mx-auto">
-          Find the perfect cake to make your {title.toLowerCase()} unforgettable.
-        </p>
+    <div>
+      {/* Dynamic Hero Banner */}
+      <div className="relative w-full h-[40vh] min-h-[300px] flex items-center justify-center overflow-hidden bg-cream-dark">
+        {occasion?.image_url ? (
+          <>
+            <Image 
+              src={occasion.image_url} 
+              alt={title} 
+              fill 
+              className="object-cover"
+              priority
+            />
+            <div className="absolute inset-0 bg-black/50" />
+          </>
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center text-[150px] opacity-10">
+            {occasion?.symbol || '🎂'}
+          </div>
+        )}
+        
+        <div className="relative z-10 text-center px-4">
+          <h1 className={`font-display text-4xl md:text-6xl mb-4 ${occasion?.image_url ? 'text-white' : 'text-ink'}`}>
+            Cakes for {title}
+          </h1>
+          <p className={`max-w-xl mx-auto text-lg ${occasion?.image_url ? 'text-white/90' : 'text-olive-dark'}`}>
+            {subtitle}
+          </p>
+        </div>
       </div>
 
-      {formattedProducts.length === 0 ? (
-        <div className="text-center py-20">
-          <p className="text-xl text-olive-dark">No cakes found for this occasion yet.</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-          {formattedProducts.map((p) => (
-            <ProductCard key={p.slug} product={p} />
-          ))}
-        </div>
-      )}
+      {/* Product Grid */}
+      <div className="mx-auto max-w-6xl px-4 py-16">
+        {formattedProducts.length === 0 ? (
+          <div className="text-center py-20">
+            <p className="text-xl text-olive-dark">No cakes found for this occasion yet.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+            {formattedProducts.map((p) => (
+              <ProductCard key={p.slug} product={p} />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
