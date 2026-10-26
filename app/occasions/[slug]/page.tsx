@@ -13,11 +13,9 @@ export default async function OccasionPage({ params }: { params: Promise<{ slug:
   const { slug } = await params;
   const sb = await createServerClient();
 
-  // Fetch the occasion details
   const { data: occasion } = await sb.from('occasions').select('*').eq('slug', slug).single();
 
-  // Fetch products matching this occasion
-  const { data: products, error } = await sb
+  const { data: products } = await sb
     .from('products')
     .select(`
       slug, name, product_type, image_layout, base_price,
@@ -28,15 +26,11 @@ export default async function OccasionPage({ params }: { params: Promise<{ slug:
     .eq('occasion', slug)
     .eq('is_active', true);
 
-  if (error) console.error(error);
-
-  // Format products for the ProductCard
   const formattedProducts = (products ?? []).map((p: any) => {
     const images = (p.product_images ?? []).sort((a: any, b: any) => a.sort_order - b.sort_order).map((i: any) => i.url);
     const validPrices = (p.product_sizes ?? []).map((s: any) => Number(s.price)).filter((n: number) => n > 0);
     const from_price = validPrices.length > 0 ? Math.min(...validPrices) : Number(p.base_price) || 0;
     const flavours = (p.product_flavours ?? []).map((pf: any) => pf.flavours?.name).filter(Boolean);
-    
     return { slug: p.slug, name: p.name, product_type: p.product_type, image_layout: p.image_layout, images, from_price, flavours };
   });
 
@@ -45,17 +39,11 @@ export default async function OccasionPage({ params }: { params: Promise<{ slug:
 
   return (
     <div>
-      {/* Dynamic Hero Banner */}
+      {/* Hero Banner */}
       <div className="relative w-full h-[40vh] min-h-[300px] flex items-center justify-center overflow-hidden bg-cream-dark">
         {occasion?.image_url ? (
           <>
-            <Image 
-              src={occasion.image_url} 
-              alt={title} 
-              fill 
-              className="object-cover"
-              priority
-            />
+            <Image src={occasion.image_url} alt={title} fill className="object-cover" priority />
             <div className="absolute inset-0 bg-black/50" />
           </>
         ) : (
@@ -74,19 +62,44 @@ export default async function OccasionPage({ params }: { params: Promise<{ slug:
         </div>
       </div>
 
-      {/* Product Grid */}
-      <div className="mx-auto max-w-6xl px-4 py-16">
-        {formattedProducts.length === 0 ? (
-          <div className="text-center py-20">
-            <p className="text-xl text-olive-dark">No cakes found for this occasion yet.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-            {formattedProducts.map((p) => (
-              <ProductCard key={p.slug} product={p} />
-            ))}
+      <div className="mx-auto max-w-6xl px-4 py-12 md:py-16 space-y-16">
+        
+        {/* 👇 GALLERY SECTION 👇 */}
+        {occasion?.gallery && occasion.gallery.length > 0 && (
+          <div>
+            <div className="text-center mb-8">
+              <h2 className="font-display text-2xl md:text-3xl text-ink">Sample Designs</h2>
+              <p className="text-sm text-olive-dark mt-2">Get inspired by our previous creations.</p>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {occasion.gallery.map((imgUrl: string, i: number) => (
+                <div key={i} className="relative aspect-square md:aspect-[4/3] rounded-2xl overflow-hidden shadow-sm group">
+                  <Image src={imgUrl} alt={`Sample ${i + 1}`} fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
+                </div>
+              ))}
+            </div>
           </div>
         )}
+
+        {/* 👇 PRODUCTS SECTION 👇 */}
+        <div>
+          <div className="text-center mb-8">
+             <h2 className="font-display text-2xl md:text-3xl text-ink">Choose Your Cake</h2>
+          </div>
+          {formattedProducts.length === 0 ? (
+            <div className="text-center py-12 bg-cream-card rounded-2xl ring-1 ring-black/5">
+              <p className="text-lg text-olive-dark">No cakes assigned to this category yet.</p>
+              <p className="text-sm text-olive-dark mt-2">Go to your Admin Panel → Products and set the occasion tag to "{slug}".</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+              {formattedProducts.map((p) => (
+                <ProductCard key={p.slug} product={p} />
+              ))}
+            </div>
+          )}
+        </div>
+
       </div>
     </div>
   );
