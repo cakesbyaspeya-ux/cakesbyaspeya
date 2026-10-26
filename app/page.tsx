@@ -3,7 +3,7 @@ import { getProducts } from '@/lib/products';
 import { ProductCard } from '@/components/product/ProductCard';
 import { TrackOrderWidget } from '@/components/home/TrackOrderWidget';
 import { RecentlyViewed } from '@/components/product/RecentlyViewed';
-import { AnnouncementBar } from '@/components\home\AnnouncementBar';
+import { AnnouncementBar } from '@/components/home/AnnouncementBar';
 import { HeroSlider } from '@/components/home/HeroSlider';
 
 const WHATSAPP_URL =
