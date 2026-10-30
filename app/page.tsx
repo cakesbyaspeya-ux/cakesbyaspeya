@@ -87,33 +87,6 @@ export default async function HomePage() {
   const featuredCakes = cakes.slice(0, 4);
   const featuredDesserts = desserts.slice(0, 6);
 
-  const categories = [
-    {
-      title: 'Celebration Cakes',
-      subtitle: 'For moments worth marking',
-      href: '/cakes',
-      symbol: '♡',
-    },
-    {
-      title: 'Dessert Collection',
-      subtitle: 'Your next favourite treat',
-      href: '/desserts',
-      symbol: '✧',
-    },
-    {
-      title: 'Custom Creations',
-      subtitle: 'Designed around your ideas',
-      href: '#custom-designs',
-      symbol: '✳',
-    },
-    {
-      title: 'Track Your Order',
-      subtitle: 'Check your order status',
-      href: '#track-order',
-      symbol: '↗',
-    },
-  ];
-
   const serviceOptions = [
     {
       icon: '↗',
@@ -216,33 +189,6 @@ export default async function HomePage() {
           </div>
 
           <HeroSlider slides={heroSlides} />
-        </div>
-      </section>
-
-      {/* QUICK CATEGORY LINKS */}
-      <section className="border-y border-olive/10 bg-white/50">
-        <div className="mx-auto grid max-w-7xl grid-cols-2 divide-x divide-y divide-olive/10 px-2 sm:px-6 md:grid-cols-4 md:divide-y-0 lg:px-8">
-          {categories.map((item) => (
-            <Link
-              key={item.title}
-              href={item.href}
-              className="group flex min-w-0 items-start gap-2 px-2 py-4 transition-colors duration-300 hover:bg-burgundy/5 sm:items-center sm:gap-4 sm:px-5 sm:py-6"
-            >
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-burgundy/10 font-display text-xl text-burgundy transition-colors duration-300 sm:h-11 sm:w-11 sm:text-2xl sm:group-hover:rotate-6 sm:group-hover:bg-burgundy sm:group-hover:text-cream">
-                {item.symbol}
-              </span>
-
-              <span>
-                <span className="block break-words text-xs font-semibold leading-snug text-ink sm:text-sm">
-                  {item.title}
-                </span>
-
-                <span className="mt-1 block text-[10px] leading-snug text-olive-dark/75 sm:text-xs">
-                  {item.subtitle}
-                </span>
-              </span>
-            </Link>
-          ))}
         </div>
       </section>
 
@@ -680,45 +626,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* FINAL CALL TO ACTION */}
-      <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 sm:pb-16 md:pb-24 lg:px-8">
-        <div className="relative overflow-hidden rounded-3xl border border-burgundy/10 bg-gradient-to-br from-cream-dark via-white to-burgundy/5 px-5 py-9 text-center sm:rounded-[2rem] sm:px-10 sm:py-16">
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute -right-10 -top-20 h-48 w-48 rounded-full bg-burgundy/5 blur-2xl"
-          />
-
-          <div className="relative">
-            <span className="text-3xl text-burgundy">✧</span>
-
-            <h2 className="mx-auto mt-4 max-w-2xl font-display text-3xl leading-tight text-ink sm:text-4xl md:text-5xl">
-              Make your next celebration unforgettable.
-            </h2>
-
-            <p className="mx-auto mt-4 max-w-lg text-sm leading-7 text-olive-dark sm:text-base">
-              Find the perfect cake or dessert to complete your occasion.
-            </p>
-
-            <div className="mt-6 flex flex-col justify-center gap-3 sm:mt-8 sm:flex-row">
-              <Link
-                href="/cakes"
-                className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-burgundy px-5 py-3.5 text-sm font-semibold text-cream transition-colors duration-300 hover:bg-burgundy-dark hover:shadow-lg sm:w-auto sm:px-7 sm:py-4 sm:hover:-translate-y-1"
-              >
-                Explore our cakes <span>→</span>
-              </Link>
-
-              <a
-                href={WHATSAPP_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full border border-olive/25 bg-white/70 px-5 py-3.5 text-sm font-semibold text-olive-dark transition-colors duration-300 hover:bg-olive hover:text-cream sm:w-auto sm:px-7 sm:py-4 sm:hover:-translate-y-1"
-              >
-                Get in touch <span>↗</span>
-              </a>
-            </div>
-          </div>
-        </div>
-      </section>
     </main>
   );
 }
