@@ -84,6 +84,10 @@ export default async function HomePage() {
       title: 'Made for your moments.',
     }));
 
+  const backgroundCakeImages = shuffleArray(
+    cakes.flatMap((cake) => cake.images || []).filter(Boolean)
+  ).slice(0, 8);
+
   const featuredCakes = cakes.slice(0, 4);
   const featuredDesserts = desserts.slice(0, 6);
 
@@ -109,8 +113,53 @@ export default async function HomePage() {
   ];
 
   return (
-    <main className="min-w-0 overflow-x-clip bg-cream text-ink motion-reduce:scroll-auto">
+    <main className="relative isolate min-w-0 overflow-x-clip bg-cream text-ink motion-reduce:scroll-auto">
+      <style>{`
+        @keyframes cakeDrift {
+          0%, 100% { transform: translate3d(0, 0, 0) rotate(-5deg); }
+          50% { transform: translate3d(0, -18px, 0) rotate(5deg); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .cake-background-drift { animation: none !important; }
+        }
+      `}</style>
 
+      {/* DYNAMIC CAKE PHOTO BACKGROUND */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
+      >
+        {backgroundCakeImages.map((image, index) => {
+          const placements = [
+            "left-[-2rem] top-[7%] h-24 w-24 sm:left-[2%] sm:h-36 sm:w-36",
+            "right-[-2rem] top-[18%] h-28 w-28 sm:right-[3%] sm:h-40 sm:w-40",
+            "left-[4%] top-[38%] h-20 w-20 sm:left-[8%] sm:h-28 sm:w-28",
+            "right-[2%] top-[49%] h-24 w-24 sm:right-[7%] sm:h-36 sm:w-36",
+            "left-[-2rem] top-[68%] h-28 w-28 sm:left-[3%] sm:h-40 sm:w-40",
+            "right-[-2rem] top-[82%] h-24 w-24 sm:right-[4%] sm:h-32 sm:w-32",
+            "left-[35%] top-[28%] h-20 w-20 sm:left-[40%] sm:h-28 sm:w-28",
+            "right-[32%] top-[72%] h-20 w-20 sm:right-[36%] sm:h-28 sm:w-28",
+          ];
+
+          return (
+            <div
+              key={`${image}-${index}`}
+              className={`cake-background-drift absolute ${placements[index % placements.length]} overflow-hidden rounded-[1.5rem] border border-white/70 opacity-[0.11] shadow-xl sm:rounded-[2rem]`}
+              style={{ animation: `cakeDrift ${12 + (index % 4) * 2}s ease-in-out ${index * -1.7}s infinite` }}
+            >
+              <Image
+                src={image}
+                alt=""
+                fill
+                sizes="(max-width: 640px) 112px, 160px"
+                className="object-cover"
+              />
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="relative z-10">
       {/* HERO SECTION */}
       <section className="relative mx-auto max-w-7xl px-4 pb-10 pt-7 sm:px-6 sm:pb-14 sm:pt-10 md:pb-20 md:pt-16 lg:px-8">
         <div
@@ -626,6 +675,7 @@ export default async function HomePage() {
         </div>
       </section>
 
+      </div>
     </main>
   );
 }
