@@ -306,12 +306,22 @@ export default async function HomePage() {
                 occasions memorable.
               </p>
 
-              <div className="mt-6 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:flex-wrap">
+              <div className="mt-6 grid grid-cols-2 gap-3 sm:mt-8 sm:flex sm:flex-wrap">
                 <Link
                   href="/cakes"
-                  className="group inline-flex min-h-12 w-full items-center justify-center gap-3 rounded-full bg-burgundy px-5 py-3.5 text-sm font-semibold text-cream shadow-lg shadow-burgundy/25 transition-all duration-300 hover:bg-burgundy-dark hover:shadow-xl sm:w-auto sm:px-7 sm:py-4 sm:hover:-translate-y-1"
+                  className="group inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-burgundy px-4 py-3.5 text-sm font-semibold text-cream shadow-lg shadow-burgundy/25 transition-all duration-300 hover:bg-burgundy-dark hover:shadow-xl sm:gap-3 sm:px-7 sm:py-4 sm:hover:-translate-y-1"
                 >
-                  Explore our collection
+                  Shop Cakes
+                  <span className="transition-transform duration-300 group-hover:translate-x-1">
+                    →
+                  </span>
+                </Link>
+
+                <Link
+                  href="/desserts"
+                  className="group inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-burgundy/30 bg-white/80 px-4 py-3.5 text-sm font-semibold text-burgundy shadow-sm backdrop-blur-sm transition-all duration-300 hover:border-burgundy hover:bg-burgundy hover:text-cream sm:gap-3 sm:px-7 sm:py-4 sm:hover:-translate-y-1"
+                >
+                  Shop Desserts
                   <span className="transition-transform duration-300 group-hover:translate-x-1">
                     →
                   </span>
@@ -321,7 +331,7 @@ export default async function HomePage() {
                   href={WHATSAPP_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full border border-olive/30 bg-white/70 px-5 py-3.5 text-sm font-semibold text-olive-dark backdrop-blur-sm transition-all duration-300 hover:border-olive hover:bg-olive hover:text-cream sm:w-auto sm:px-7 sm:py-4 sm:hover:-translate-y-1"
+                  className="col-span-2 inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-olive/30 bg-white/70 px-5 py-3.5 text-sm font-semibold text-olive-dark backdrop-blur-sm transition-all duration-300 hover:border-olive hover:bg-olive hover:text-cream sm:col-span-1 sm:px-7 sm:py-4 sm:hover:-translate-y-1"
                 >
                   <span aria-hidden="true">↗</span>
                   Order via WhatsApp
