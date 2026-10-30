@@ -1,168 +1,120 @@
-
 @import "tailwindcss";
 
-/* Force light mode on all devices */
-:root {
-  color-scheme: light;
-}
+:root { color-scheme: light; }
 
-/* ─────────────────────────────────────────
-   THEME — Cakes by Aspeya
-───────────────────────────────────────── */
 @theme {
-  /* Olive Green */
-  --color-olive: #5C6B3F;
-  --color-olive-dark: #414D2C;
-  --color-olive-light: #7C8B5E;
+  /* Brand — refined burgundy */
+  --color-burgundy: #5B2333;
+  --color-burgundy-dark: #3D1622;
+  --color-burgundy-light: #7A3444;
 
-  /* Burgundy */
-  --color-burgundy: #6E1F2E;
-  --color-burgundy-dark: #4E1420;
-  --color-burgundy-light: #8F2E40;
+  /* Secondary — refined olive */
+  --color-olive: #4A5D3A;
+  --color-olive-dark: #364428;
+  --color-olive-light: #6B7F58;
 
-  /* Cream */
-  --color-cream: #FAF3E3;
-  --color-cream-dark: #F0E4CC;
-  --color-cream-card: #FFFDF7;
+  /* Warm accent */
+  --color-gold: #B8935A;
 
   /* Neutrals */
-  --color-ink: #2A2A24;
-  --color-whatsapp: #25D366;
+  --color-cream: #FAF8F3;
+  --color-cream-dark: #F0EBE0;
+  --color-cream-card: #FFFFFF;
+  --color-ink: #1A1A1A;
+  --color-ink-light: #4A4A4A;
+  --color-ink-muted: #8A8A8A;
+  --color-border: #E5DFD3;
+  --color-whatsapp: #1FA855;
 
-  /* Fonts */
-  --font-display: var(--font-playfair), 'Playfair Display', serif;
-  --font-body: var(--font-inter), 'Inter', sans-serif;
-  --font-handwriting: var(--font-caveat), 'Caveat', cursive;
+  /* Type */
+  --font-display: var(--font-fraunces), Georgia, 'Times New Roman', serif;
+  --font-body: var(--font-inter), system-ui, -apple-system, sans-serif;
 }
 
-/* ─────────────────────────────────────────
-   BASE STYLES
-───────────────────────────────────────── */
-html {
-  scroll-behavior: smooth;
-  scroll-padding-top: 5rem;
-  min-height: 100%;
-}
+html { scroll-behavior: smooth; scroll-padding-top: 5rem; min-height: 100%; }
 
 body {
   min-height: 100vh;
-  background-color: var(--color-cream);
-  background-image:
-    radial-gradient(
-      at 0% 0%,
-      rgba(250, 243, 227, 1) 0,
-      transparent 50%
-    ),
-    radial-gradient(
-      at 100% 100%,
-      rgba(240, 228, 204, 0.5) 0,
-      transparent 50%
-    );
+  background: var(--color-cream);
   color: var(--color-ink);
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
-/* Prevent images from overflowing their containers */
-img {
-  max-width: 100%;
-}
+img { max-width: 100%; display: block; }
+a { -webkit-tap-highlight-color: transparent; }
 
-/* Consistent link behavior */
-a {
-  -webkit-tap-highlight-color: transparent;
-}
-
-/* Better keyboard accessibility */
 :focus-visible {
   outline: 2px solid var(--color-burgundy);
-  outline-offset: 4px;
+  outline-offset: 3px;
+  border-radius: 2px;
 }
 
-/* ─────────────────────────────────────────
-   ANIMATIONS
-───────────────────────────────────────── */
+/* ─── Utilities ─────────────────────────────────────── */
+.container-page {
+  width: 100%;
+  max-width: 78rem;
+  margin-inline: auto;
+  padding-inline: 1.25rem;
+}
+@media (min-width: 640px) { .container-page { padding-inline: 1.75rem; } }
+@media (min-width: 1024px) { .container-page { padding-inline: 2.5rem; } }
 
-/* Hero content entrance */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(24px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.eyebrow {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-ink-muted);
 }
 
-/* Gentle floating decoration */
-@keyframes float {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
+.hairline { border-top: 1px solid var(--color-border); }
 
-  50% {
-    transform: translateY(-10px);
-  }
-}
-
-/* Soft pulsing accent */
-@keyframes softPulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-
-  50% {
-    opacity: 0.55;
-  }
-}
-
-/* Reusable animation utilities */
-.animate-fade-in-up {
-  animation: fadeInUp 0.7s ease-out both;
-}
-
-.animate-float {
-  animation: float 4s ease-in-out infinite;
-}
-
-.animate-soft-pulse {
-  animation: softPulse 2s ease-in-out infinite;
-}
-
-/* ─────────────────────────────────────────
-   REUSABLE FORM INPUT
-───────────────────────────────────────── */
 .input {
   width: 100%;
-  border: 1px solid
-    color-mix(in srgb, var(--color-olive) 30%, transparent);
-  border-radius: 0.5rem;
-  background-color: var(--color-cream-card);
-  padding: 0.625rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.375rem;
+  background-color: #fff;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.9375rem;
+  color: var(--color-ink);
   outline: none;
-  transition:
-    border-color 150ms ease,
-    box-shadow 150ms ease;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
 }
-
 .input:focus {
   border-color: var(--color-burgundy);
-  box-shadow: 0 0 0 3px
-    color-mix(in srgb, var(--color-burgundy) 12%, transparent);
+  box-shadow: 0 0 0 3px rgba(91, 35, 51, 0.08);
 }
 
-/* ─────────────────────────────────────────
-   REDUCED MOTION ACCESSIBILITY
-───────────────────────────────────────── */
+.btn-primary {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+  background: var(--color-burgundy); color: var(--color-cream);
+  padding: 0.8rem 1.5rem; border-radius: 0.375rem;
+  font-weight: 500; font-size: 0.9375rem; letter-spacing: 0.01em;
+  transition: background-color 150ms ease;
+}
+.btn-primary:hover { background: var(--color-burgundy-dark); }
+
+.btn-secondary {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+  background: transparent; color: var(--color-ink);
+  padding: 0.8rem 1.5rem; border-radius: 0.375rem;
+  font-weight: 500; font-size: 0.9375rem;
+  border: 1px solid var(--color-border);
+  transition: border-color 150ms ease, background-color 150ms ease;
+}
+.btn-secondary:hover { border-color: var(--color-ink); background: #fff; }
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in-up { animation: fadeInUp 0.5s ease-out both; }
+
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  *, *::before, *::after {
     scroll-behavior: auto !important;
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
