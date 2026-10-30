@@ -193,7 +193,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* FEATURED DESSERTS — intentionally placed before cakes */}
+      {/* FEATURED DESSERTS */}
       <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
         <div className="mb-7 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <SectionHeading
@@ -307,8 +307,8 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* CUSTOM CAKES */}
-      <section className="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
+      {/* CUSTOM CAKES - ADDED UPLOAD BUTTON HERE */}
+      <section id="custom-designs" className="scroll-mt-24 mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
         <div className="rounded-3xl bg-burgundy px-6 py-10 text-cream sm:px-10 sm:py-14">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cream/70">
             Your idea, made special
@@ -319,18 +319,26 @@ export default async function HomePage() {
                 Have a cake design in mind?
               </h2>
               <p className="mt-3 max-w-xl text-sm leading-7 text-cream/80">
-                Send us your inspiration, preferred flavour and occasion.
-                We will discuss the design and confirm the price with you.
+                Upload a reference photo of your dream cake. We will discuss the design and confirm the price with you.
               </p>
             </div>
-            <a
-              href={WHATSAPP_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex w-fit items-center justify-center rounded-full bg-cream px-6 py-3.5 text-sm font-semibold text-burgundy hover:bg-white"
-            >
-              Discuss your design on WhatsApp →
-            </a>
+            <div className="flex flex-col sm:flex-row gap-3">
+              {/* 👇 This button takes them to the Step 1 upload flow 👇 */}
+              <Link
+                href="/cakes/chocolate-cake" 
+                className="inline-flex w-fit items-center justify-center rounded-full bg-cream px-6 py-3.5 text-sm font-semibold text-burgundy hover:bg-white transition hover:-translate-y-0.5"
+              >
+                🖼️ Upload Your Design
+              </Link>
+              <a
+                href={WHATSAPP_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex w-fit items-center justify-center rounded-full border border-cream/30 px-6 py-3.5 text-sm font-semibold text-cream hover:bg-cream/10 transition"
+              >
+                Ask on WhatsApp
+              </a>
+            </div>
           </div>
         </div>
       </section>

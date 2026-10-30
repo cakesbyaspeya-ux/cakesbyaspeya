@@ -3,12 +3,23 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import Image from 'next/image';
 
-export function ProductEditor({ product, images, sizes }: { product: any; images: any[]; sizes: any[] }) {
+export function ProductEditor({ 
+  product, 
+  images, 
+  sizes,
+  allFlavours
+}: { 
+  product: any; 
+  images: any[]; 
+  sizes: any[];
+  allFlavours: any[];
+}) {
   const router = useRouter();
   const sb = createClient();
   
-  // Form state
+  // ── State ──
   const [formData, setFormData] = useState({
     name: product.name,
     short_desc: product.short_desc || '',
@@ -21,10 +32,14 @@ export function ProductEditor({ product, images, sizes }: { product: any; images
     sizes.sort((a, b) => a.sort_order - b.sort_order).map(s => ({ ...s }))
   );
 
+  const [flavours, setFlavours] = useState<string[]>(
+    (product.product_flavours ?? []).map((pf: any) => pf.flavour_id)
+  );
+
   const [saving, setSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState<number | null>(null);
 
-  // Handle Image Upload
+  // ── Image Handlers ──
   async function handleImageUpload(slotIndex: number, file: File) {
     setUploadingImage(slotIndex);
     
@@ -44,7 +59,7 @@ export function ProductEditor({ product, images, sizes }: { product: any; images
     // 2. Get Public URL
     const { data: { publicUrl } } = sb.storage.from('product-images').getPublicUrl(fileName);
 
-    // 3. Save to database (product_images table)
+    // 3. Save to database
     const existingImage = images.find(img => img.sort_order === slotIndex);
     
     if (existingImage) {
@@ -58,17 +73,16 @@ export function ProductEditor({ product, images, sizes }: { product: any; images
     }
 
     setUploadingImage(null);
-    router.refresh(); // Refresh to show new image
+    router.refresh(); 
   }
 
-  // Handle Delete Image
   async function handleRemoveImage(imageId: string) {
     if (!confirm('Remove this image?')) return;
     await sb.from('product_images').delete().eq('id', imageId);
     router.refresh();
   }
 
-  // Handle Save
+  // ── Save Handler ──
   async function handleSave() {
     setSaving(true);
     
@@ -86,25 +100,38 @@ export function ProductEditor({ product, images, sizes }: { product: any; images
       await sb.from('product_sizes').update({ price: size.price }).eq('id', size.id);
     }
 
+    // 3. Update flavours (Delete all first, then insert selected)
+    await sb.from('product_flavours').delete().eq('product_id', product.id);
+    if (flavours.length > 0) {
+      const flavourInserts = flavours.map(fid => ({
+        product_id: product.id,
+        flavour_id: fid
+      }));
+      await sb.from('product_flavours').insert(flavourInserts);
+    }
+
     setSaving(false);
     router.refresh();
     alert('Product saved successfully!');
   }
 
   return (
-    <div className="max-w-3xl mx-auto space-y-8 pb-20">
+    <div className="max-w-4xl mx-auto space-y-8 pb-20">
       <div className="flex items-center justify-between">
-        <h1 className="font-display text-3xl text-ink">Edit: {product.name}</h1>
+        <div>
+          <h1 className="font-display text-3xl text-ink">Edit: {product.name}</h1>
+          <p className="text-sm text-olive-dark mt-1">Update images, prices, and details.</p>
+        </div>
         <button 
           onClick={handleSave} 
           disabled={saving}
-          className="rounded-full bg-burgundy px-6 py-2.5 text-sm font-medium text-cream hover:bg-burgundy-dark transition disabled:opacity-50"
+          className="rounded-full bg-burgundy px-8 py-3 text-sm font-medium text-cream shadow hover:bg-burgundy-dark transition disabled:opacity-50"
         >
           {saving ? 'Saving...' : 'Save Changes'}
         </button>
       </div>
 
-      {/* BASIC INFO */}
+      {/* ── BASIC INFO ── */}
       <section className="rounded-2xl bg-cream-card p-6 ring-1 ring-black/5 space-y-4">
         <h2 className="font-display text-xl border-b border-olive/20 pb-2">Basic Info</h2>
         
@@ -162,29 +189,38 @@ export function ProductEditor({ product, images, sizes }: { product: any; images
         </div>
       </section>
 
-      {/* IMAGES */}
+      {/* ── IMAGES (UP TO 20) ── */}
       <section className="rounded-2xl bg-cream-card p-6 ring-1 ring-black/5">
-        <h2 className="font-display text-xl border-b border-olive/20 pb-2 mb-4">Images (Up to 4)</h2>
+        <div className="flex items-center justify-between border-b border-olive/20 pb-2 mb-4">
+          <h2 className="font-display text-xl">Design Gallery (Up to 20)</h2>
+          <span className="text-xs font-medium text-olive-dark bg-olive/10 px-3 py-1 rounded-full">
+            {images.length} / 20 Uploaded
+          </span>
+        </div>
+        
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[0, 1, 2, 3].map(slot => {
+          {Array.from({ length: 20 }).map((_, slot) => {
             const img = images.find(i => i.sort_order === slot);
             return (
-              <div key={slot} className="relative aspect-square rounded-xl bg-cream-dark overflow-hidden ring-1 ring-black/5 flex flex-col items-center justify-center">
+              <div key={slot} className="relative aspect-square rounded-xl bg-cream-dark overflow-hidden ring-1 ring-black/5 flex flex-col items-center justify-center group">
                 {img ? (
                   <>
-                    <img src={img.url} alt="" className="w-full h-full object-cover" />
-                    <button 
-                      onClick={() => handleRemoveImage(img.id)}
-                      className="absolute top-2 right-2 bg-cream/90 hover:bg-burgundy hover:text-cream text-ink text-xs font-bold w-6 h-6 rounded-full transition"
-                    >
-                      ✕
-                    </button>
+                    <Image src={img.url} alt={`Design ${slot + 1}`} fill className="object-cover" sizes="(max-width: 768px) 50vw, 25vw" />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <button 
+                        onClick={() => handleRemoveImage(img.id)}
+                        className="bg-burgundy text-cream px-3 py-1.5 rounded-full text-xs font-medium hover:bg-burgundy-dark"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                    <span className="absolute bottom-2 left-2 bg-black/60 text-white text-[10px] font-bold px-2 py-0.5 rounded">Design {slot + 1}</span>
                   </>
                 ) : (
                   <label className="flex flex-col items-center justify-center w-full h-full cursor-pointer hover:bg-cream-dark/50 transition">
                     <span className="text-2xl opacity-30 mb-1">🖼</span>
-                    <span className="text-xs text-olive-dark font-medium">
-                      {uploadingImage === slot ? 'Uploading...' : 'Upload'}
+                    <span className="text-xs text-olive-dark font-medium text-center px-2">
+                      {uploadingImage === slot ? 'Uploading...' : `Upload Slot ${slot + 1}`}
                     </span>
                     <input 
                       type="file" 
@@ -203,15 +239,15 @@ export function ProductEditor({ product, images, sizes }: { product: any; images
         </div>
       </section>
 
-      {/* SIZES & PRICES (Only for cakes) */}
-      {sizes.length > 0 && (
+      {/* ── SIZES & PRICES ── */}
+      {sizePrices.length > 0 && (
         <section className="rounded-2xl bg-cream-card p-6 ring-1 ring-black/5">
           <h2 className="font-display text-xl border-b border-olive/20 pb-2 mb-4">Sizes & Prices</h2>
-          <div className="space-y-3">
+          <div className="grid gap-4 sm:grid-cols-2">
             {sizePrices.map((size, idx) => (
-              <div key={size.id} className="flex items-center gap-4">
-                <span className="w-20 text-sm font-medium text-ink">{size.label}</span>
-                <div className="relative flex-1 max-w-[200px]">
+              <div key={size.id} className="flex items-center justify-between gap-4 bg-white/50 p-3 rounded-xl border border-olive/10">
+                <span className="text-sm font-medium text-ink w-16">{size.label}</span>
+                <div className="relative flex-1">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-olive-dark">৳</span>
                   <input 
                     type="number" 
@@ -221,15 +257,56 @@ export function ProductEditor({ product, images, sizes }: { product: any; images
                       newPrices[idx].price = Number(e.target.value);
                       setSizePrices(newPrices);
                     }}
-                    className="input pl-8" 
+                    className="input pl-8 py-2" 
                   />
                 </div>
               </div>
             ))}
           </div>
-          <p className="text-xs text-olive-dark mt-4">* Leave a price as 0 to hide that size from customers.</p>
         </section>
       )}
+
+      {/* ── FLAVOURS ── */}
+      <section className="rounded-2xl bg-cream-card p-6 ring-1 ring-black/5">
+        <h2 className="font-display text-xl border-b border-olive/20 pb-2 mb-4">Available Flavours</h2>
+        <p className="text-xs text-olive-dark mb-4">Select which flavours customers can choose for this product.</p>
+        
+        <div className="flex flex-wrap gap-2">
+          {allFlavours.map((f: any) => {
+            const isSelected = flavours.includes(f.id);
+            return (
+              <button
+                key={f.id}
+                type="button"
+                onClick={() => {
+                  if (isSelected) setFlavours(flavours.filter(id => id !== f.id));
+                  else setFlavours([...flavours, f.id]);
+                }}
+                className={`rounded-full border px-4 py-2 text-sm font-medium transition ${
+                  isSelected 
+                    ? 'border-burgundy bg-burgundy text-cream' 
+                    : 'border-olive/30 text-olive-dark hover:border-olive hover:bg-white'
+                }`}
+              >
+                {isSelected ? '✓ ' : '+ '}
+                {f.name}
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* Bottom Save Button (Mobile) */}
+      <div className="flex justify-end pt-4">
+        <button 
+          onClick={handleSave} 
+          disabled={saving}
+          className="w-full sm:w-auto rounded-full bg-burgundy px-8 py-3.5 text-sm font-medium text-cream shadow hover:bg-burgundy-dark transition disabled:opacity-50"
+        >
+          {saving ? 'Saving...' : 'Save Changes'}
+        </button>
+      </div>
+
     </div>
   );
 }
