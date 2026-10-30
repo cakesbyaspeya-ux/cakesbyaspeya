@@ -136,10 +136,10 @@ export default async function HomePage() {
   ];
 
   return (
-    <main className="overflow-hidden bg-cream text-ink">
+    <main className="min-w-0 overflow-x-clip bg-cream text-ink motion-reduce:scroll-auto">
 
       {/* HERO SECTION */}
-      <section className="relative mx-auto max-w-7xl px-4 pb-14 pt-10 sm:px-6 md:pb-20 md:pt-16 lg:px-8">
+      <section className="relative mx-auto max-w-7xl px-4 pb-10 pt-7 sm:px-6 sm:pb-14 sm:pt-10 md:pb-20 md:pt-16 lg:px-8">
         <div
           aria-hidden="true"
           className="pointer-events-none absolute -right-24 top-0 h-72 w-72 rounded-full bg-burgundy/5 blur-3xl"
@@ -150,35 +150,35 @@ export default async function HomePage() {
           className="pointer-events-none absolute -left-24 bottom-0 h-64 w-64 rounded-full bg-olive/10 blur-3xl"
         />
 
-        <div className="relative grid items-center gap-10 md:grid-cols-2 md:gap-12 lg:gap-20">
+        <div className="relative grid min-w-0 grid-cols-1 items-center gap-8 sm:gap-10 md:grid-cols-2 md:gap-8 lg:gap-16">
 
-          <div className="animate-[fadeInUp_0.7s_ease-out_both]">
-            <div className="inline-flex items-center gap-2 rounded-full border border-burgundy/15 bg-white/70 px-4 py-2 text-xs font-medium tracking-wide text-burgundy shadow-sm backdrop-blur-sm sm:text-sm">
+          <div className="min-w-0 animate-[fadeInUp_0.7s_ease-out_both] motion-reduce:animate-none">
+            <div className="inline-flex max-w-full items-center gap-2 rounded-full border border-burgundy/15 bg-white/70 px-3 py-2 text-[11px] font-medium tracking-wide text-burgundy shadow-sm backdrop-blur-sm sm:px-4 sm:text-sm">
              <span className="h-2 w-2 animate-pulse rounded-full bg-burgundy" />
               Custom Cakes & Delightful Desserts
              </div>
 
-            <h1 className="mt-6 max-w-xl font-display text-5xl leading-[1.08] tracking-tight text-ink sm:text-6xl lg:text-7xl">
+            <h1 className="mt-5 max-w-xl font-display text-[clamp(2.5rem,10vw,3.5rem)] leading-[1.06] tracking-tight text-ink sm:mt-6 sm:text-6xl lg:text-7xl">
               A little sweetness,
               <span className="mt-2 block italic text-burgundy">
                 a lot of love.
               </span>
             </h1>
 
-            <p className="mt-6 max-w-lg text-base leading-8 text-olive-dark sm:text-lg">
+            <p className="mt-4 max-w-lg text-sm leading-7 text-olive-dark sm:mt-6 sm:text-lg sm:leading-8">
               From elegant celebration cakes to delightful desserts,
               discover handcrafted creations designed to make your
               occasions memorable.
             </p>
 
-            <p className="mt-3 text-sm text-olive-dark/75">
+            <p className="mt-3 text-xs text-olive-dark/75 sm:text-sm">
               Freshly prepared · Made to order
             </p>
 
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            <div className="mt-6 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:flex-wrap">
               <Link
                 href="/cakes"
-                className="group inline-flex items-center justify-center gap-3 rounded-full bg-burgundy px-7 py-4 text-sm font-semibold text-cream shadow-lg shadow-burgundy/15 transition-all duration-300 hover:-translate-y-1 hover:bg-burgundy-dark hover:shadow-xl"
+                className="group inline-flex min-h-12 w-full items-center justify-center gap-3 rounded-full bg-burgundy px-5 py-3.5 text-sm font-semibold text-cream shadow-lg shadow-burgundy/15 transition-colors duration-300 hover:bg-burgundy-dark hover:shadow-xl sm:w-auto sm:px-7 sm:py-4 sm:hover:-translate-y-1"
               >
                 Explore our collection
                 <span className="transition-transform duration-300 group-hover:translate-x-1">
@@ -190,14 +190,14 @@ export default async function HomePage() {
                 href={WHATSAPP_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 rounded-full border border-olive/30 bg-white/60 px-7 py-4 text-sm font-semibold text-olive-dark transition-all duration-300 hover:-translate-y-1 hover:border-olive hover:bg-olive hover:text-cream"
+                className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full border border-olive/30 bg-white/60 px-5 py-3.5 text-sm font-semibold text-olive-dark transition-colors duration-300 hover:border-olive hover:bg-olive hover:text-cream sm:w-auto sm:px-7 sm:py-4 sm:hover:-translate-y-1"
               >
                 <span aria-hidden="true">↗</span>
                 Order via WhatsApp
               </a>
             </div>
 
-            <div className="mt-10 flex flex-wrap gap-x-6 gap-y-3 border-t border-olive/15 pt-6 text-xs text-olive-dark sm:text-sm">
+            <div className="mt-7 flex flex-wrap gap-x-4 gap-y-3 border-t border-olive/15 pt-5 text-[11px] text-olive-dark sm:mt-10 sm:gap-x-6 sm:pt-6 sm:text-sm">
               <span className="flex items-center gap-2">
                 <span className="text-burgundy">✦</span>
                 Custom-made designs
@@ -221,23 +221,23 @@ export default async function HomePage() {
 
       {/* QUICK CATEGORY LINKS */}
       <section className="border-y border-olive/10 bg-white/50">
-        <div className="mx-auto grid max-w-7xl grid-cols-2 divide-x divide-y divide-olive/10 px-4 sm:px-6 md:grid-cols-4 md:divide-y-0 lg:px-8">
+        <div className="mx-auto grid max-w-7xl grid-cols-2 divide-x divide-y divide-olive/10 px-2 sm:px-6 md:grid-cols-4 md:divide-y-0 lg:px-8">
           {categories.map((item) => (
             <Link
               key={item.title}
               href={item.href}
-              className="group flex items-center gap-3 px-3 py-5 transition-colors duration-300 hover:bg-burgundy/5 sm:gap-4 sm:px-5 sm:py-6"
+              className="group flex min-w-0 items-start gap-2 px-2 py-4 transition-colors duration-300 hover:bg-burgundy/5 sm:items-center sm:gap-4 sm:px-5 sm:py-6"
             >
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-burgundy/10 font-display text-2xl text-burgundy transition-all duration-300 group-hover:rotate-6 group-hover:bg-burgundy group-hover:text-cream">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-burgundy/10 font-display text-xl text-burgundy transition-colors duration-300 sm:h-11 sm:w-11 sm:text-2xl sm:group-hover:rotate-6 sm:group-hover:bg-burgundy sm:group-hover:text-cream">
                 {item.symbol}
               </span>
 
               <span>
-                <span className="block text-sm font-semibold text-ink">
+                <span className="block break-words text-xs font-semibold leading-snug text-ink sm:text-sm">
                   {item.title}
                 </span>
 
-                <span className="mt-1 block text-xs text-olive-dark/75">
+                <span className="mt-1 block text-[10px] leading-snug text-olive-dark/75 sm:text-xs">
                   {item.subtitle}
                 </span>
               </span>
@@ -247,13 +247,13 @@ export default async function HomePage() {
       </section>
 
       {/* SHOP BY OCCASION */}
-      <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 md:py-20 lg:px-8">
+      <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14 md:py-20 lg:px-8">
         <div className="mb-8 text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.25em] text-burgundy">
             Celebrate in style
           </p>
 
-          <h2 className="mt-3 font-display text-3xl text-ink sm:text-4xl md:text-5xl">
+          <h2 className="mt-3 font-display text-2xl leading-tight text-ink sm:text-4xl md:text-5xl">
             Every occasion has its cake
           </h2>
 
@@ -264,12 +264,12 @@ export default async function HomePage() {
         </div>
 
         {occasions.length > 0 ? (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 lg:gap-5">
             {occasions.map((occasion, index) => (
               <Link
                 key={occasion.slug}
                 href={`/occasions/${occasion.slug}`}
-                className="group relative isolate overflow-hidden rounded-3xl border border-olive/10 bg-white/70 p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-burgundy/20 hover:shadow-xl hover:shadow-olive/10 sm:p-7"
+                className="group relative isolate flex min-w-0 flex-col overflow-hidden rounded-2xl border border-olive/10 bg-white/70 p-3.5 shadow-sm transition-colors duration-300 hover:border-burgundy/20 hover:shadow-xl hover:shadow-olive/10 sm:rounded-3xl sm:p-7 sm:hover:-translate-y-1"
                 style={{ animationDelay: `${index * 100}ms` }}
               >
                 {occasion.image_url && (
@@ -301,7 +301,7 @@ export default async function HomePage() {
                 </span>
 
                 <h3
-                  className={`mt-5 font-display text-xl sm:text-2xl ${
+                  className={`mt-4 break-words font-display text-lg leading-tight sm:mt-5 sm:text-2xl ${
                     occasion.image_url ? 'text-white' : 'text-ink'
                   }`}
                 >
@@ -319,7 +319,7 @@ export default async function HomePage() {
                 </p>
 
                 <span
-                  className={`mt-5 inline-flex items-center gap-2 text-sm font-semibold transition-all group-hover:gap-3 ${
+                  className={`mt-4 inline-flex items-center gap-2 text-xs font-semibold transition-all sm:mt-5 sm:text-sm sm:group-hover:gap-3 ${
                     occasion.image_url ? 'text-white' : 'text-burgundy'
                   }`}
                 >
@@ -347,14 +347,14 @@ export default async function HomePage() {
       </section>
 
       {/* FEATURED CAKES */}
-      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-20 lg:px-8">
-        <div className="mb-8 flex items-end justify-between gap-4 md:mb-10">
+      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-14 md:py-20 lg:px-8">
+        <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:mb-8 sm:flex-row sm:items-end md:mb-10">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.25em] text-burgundy">
               Crafted for the occasion
             </p>
 
-            <h2 className="mt-3 font-display text-3xl text-ink sm:text-4xl md:text-5xl">
+            <h2 className="mt-3 font-display text-2xl leading-tight text-ink sm:text-4xl md:text-5xl">
               Meet your next favourite cake
             </h2>
 
@@ -374,7 +374,7 @@ export default async function HomePage() {
         </div>
 
         {featuredCakes.length > 0 ? (
-          <div className="grid grid-cols-2 gap-4 sm:gap-5 lg:grid-cols-4 lg:gap-6">
+          <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4 lg:gap-6">
             {featuredCakes.map((product) => (
               <div
                 key={product.slug}
@@ -409,7 +409,7 @@ export default async function HomePage() {
         id="custom-designs"
         className="mx-auto scroll-mt-24 max-w-7xl px-4 sm:px-6 lg:px-8"
       >
-        <div className="group relative overflow-hidden rounded-[2rem] bg-burgundy px-6 py-10 text-cream sm:px-10 sm:py-14 lg:px-16 lg:py-16">
+        <div className="group relative overflow-hidden rounded-3xl bg-burgundy px-5 py-8 text-cream sm:rounded-[2rem] sm:px-10 sm:py-14 lg:px-16 lg:py-16">
           <div
             aria-hidden="true"
             className="absolute -right-12 -top-20 h-64 w-64 rounded-full border border-white/10 transition-transform duration-700 group-hover:scale-110 sm:h-80 sm:w-80"
@@ -420,7 +420,7 @@ export default async function HomePage() {
             className="absolute -bottom-28 right-1/4 h-64 w-64 rounded-full bg-white/5 blur-2xl"
           />
 
-          <div className="relative grid items-center gap-8 md:grid-cols-[1fr_auto] md:gap-12">
+          <div className="relative grid items-start gap-6 md:grid-cols-[1fr_auto] md:items-center md:gap-12">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.25em] text-cream/70">
                 Your vision, our craftsmanship
@@ -456,14 +456,14 @@ export default async function HomePage() {
       </section>
 
       {/* FEATURED DESSERTS */}
-      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-20 lg:px-8">
-        <div className="mb-8 flex items-end justify-between gap-4 md:mb-10">
+      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-14 md:py-20 lg:px-8">
+        <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:mb-8 sm:flex-row sm:items-end md:mb-10">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.25em] text-burgundy">
               A collection of irresistible treats
             </p>
 
-            <h2 className="mt-3 font-display text-3xl text-ink sm:text-4xl md:text-5xl">
+            <h2 className="mt-3 font-display text-2xl leading-tight text-ink sm:text-4xl md:text-5xl">
               Beyond the cake
             </h2>
 
@@ -483,7 +483,7 @@ export default async function HomePage() {
         </div>
 
         {featuredDesserts.length > 0 ? (
-          <div className="grid grid-cols-2 gap-4 sm:gap-5 md:grid-cols-3 lg:grid-cols-6 lg:gap-5">
+          <div className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 lg:grid-cols-6 lg:gap-5">
             {featuredDesserts.map((product) => (
               <div
                 key={product.slug}
@@ -517,7 +517,7 @@ export default async function HomePage() {
       <RecentlyViewed />
 
       {/* HOW TO ORDER */}
-      <section className="relative overflow-hidden bg-olive py-16 text-cream md:py-20">
+      <section className="relative overflow-hidden bg-olive py-12 text-cream sm:py-16 md:py-20">
         <div
           aria-hidden="true"
           className="pointer-events-none absolute -left-24 top-10 h-72 w-72 rounded-full bg-white/5 blur-3xl"
@@ -539,11 +539,11 @@ export default async function HomePage() {
             </p>
           </div>
 
-          <div className="mt-12 grid gap-5 md:grid-cols-3 md:gap-6">
+          <div className="mt-8 grid gap-4 sm:mt-10 md:grid-cols-3 md:gap-6">
             {ORDER_STEPS.map((step) => (
               <div
                 key={step.number}
-                className="group rounded-3xl border border-white/15 bg-white/[0.04] p-6 transition-all duration-300 hover:-translate-y-2 hover:border-white/30 hover:bg-white/[0.08] sm:p-8"
+                className="group rounded-2xl border border-white/15 bg-white/[0.04] p-5 transition-colors duration-300 hover:border-white/30 hover:bg-white/[0.08] sm:rounded-3xl sm:p-8 sm:hover:-translate-y-2"
               >
                 <div className="flex items-center justify-between">
                   <span className="font-display text-4xl text-cream/25">
@@ -585,13 +585,13 @@ export default async function HomePage() {
       </section>
 
       {/* INSTAGRAM GALLERY */}
-      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-20 lg:px-8">
+      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-14 md:py-20 lg:px-8">
         <div className="mb-8 flex flex-col items-center text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.25em] text-burgundy">
             Fresh from our kitchen
           </p>
 
-          <h2 className="mt-3 font-display text-3xl text-ink sm:text-4xl md:text-5xl">
+          <h2 className="mt-3 font-display text-2xl leading-tight text-ink sm:text-4xl md:text-5xl">
             A closer look at our creations
           </h2>
 
@@ -612,7 +612,7 @@ export default async function HomePage() {
           </a>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-6">
+        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-6">
           {INSTAGRAM_IMAGES.map((image, index) => (
             <a
               key={`${image}-${index}`}
@@ -620,17 +620,17 @@ export default async function HomePage() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label={`Explore Cakes by Aspeya on Instagram, gallery image ${index + 1}`}
-              className="group relative aspect-square overflow-hidden rounded-2xl bg-cream-dark"
+              className="group relative aspect-square min-w-0 overflow-hidden rounded-xl bg-cream-dark sm:rounded-2xl"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={`https://images.unsplash.com/${image}?auto=format&fit=crop&w=500&q=80`}
                 alt={`Cake and dessert inspiration ${index + 1}`}
                 loading="lazy"
-                className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                className="h-full w-full object-cover sm:transition-transform sm:duration-700 sm:ease-out sm:group-hover:scale-110"
               />
 
-              <div className="absolute inset-0 flex items-center justify-center bg-burgundy/0 transition-colors duration-300 group-hover:bg-burgundy/45">
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-burgundy/0 transition-colors duration-300 sm:group-hover:bg-burgundy/45">
                 <span className="translate-y-3 rounded-full border border-white/50 px-4 py-2 text-xs font-medium text-white opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
                   View Instagram ↗
                 </span>
@@ -645,7 +645,7 @@ export default async function HomePage() {
       </section>
 
       {/* DELIVERY, PICKUP AND SUPPORT */}
-      <section className="border-t border-olive/10 bg-white/35 py-16 md:py-20">
+      <section className="border-t border-olive/10 bg-white/35 py-12 sm:py-16 md:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mb-10 text-center">
             <p className="text-xs font-semibold uppercase tracking-[0.25em] text-burgundy">
@@ -657,11 +657,11 @@ export default async function HomePage() {
             </h2>
           </div>
 
-          <div className="grid gap-5 md:grid-cols-3">
+          <div className="grid gap-4 sm:gap-5 md:grid-cols-3">
             {serviceOptions.map((item) => (
               <div
                 key={item.title}
-                className="group rounded-3xl border border-olive/10 bg-white/75 p-7 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-burgundy/20 hover:shadow-xl hover:shadow-olive/5 sm:p-8"
+                className="group rounded-2xl border border-olive/10 bg-white/75 p-5 shadow-sm transition-colors duration-300 hover:border-burgundy/20 hover:shadow-xl hover:shadow-olive/5 sm:rounded-3xl sm:p-8 sm:hover:-translate-y-1"
               >
                 <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-burgundy/10 font-display text-3xl text-burgundy transition-all duration-300 group-hover:bg-burgundy group-hover:text-cream">
                   {item.icon}
@@ -681,8 +681,8 @@ export default async function HomePage() {
       </section>
 
       {/* FINAL CALL TO ACTION */}
-      <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 md:pb-24 lg:px-8">
-        <div className="relative overflow-hidden rounded-[2rem] border border-burgundy/10 bg-gradient-to-br from-cream-dark via-white to-burgundy/5 px-6 py-12 text-center sm:px-10 sm:py-16">
+      <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 sm:pb-16 md:pb-24 lg:px-8">
+        <div className="relative overflow-hidden rounded-3xl border border-burgundy/10 bg-gradient-to-br from-cream-dark via-white to-burgundy/5 px-5 py-9 text-center sm:rounded-[2rem] sm:px-10 sm:py-16">
           <div
             aria-hidden="true"
             className="pointer-events-none absolute -right-10 -top-20 h-48 w-48 rounded-full bg-burgundy/5 blur-2xl"
@@ -699,10 +699,10 @@ export default async function HomePage() {
               Find the perfect cake or dessert to complete your occasion.
             </p>
 
-            <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+            <div className="mt-6 flex flex-col justify-center gap-3 sm:mt-8 sm:flex-row">
               <Link
                 href="/cakes"
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-burgundy px-7 py-4 text-sm font-semibold text-cream transition-all duration-300 hover:-translate-y-1 hover:bg-burgundy-dark hover:shadow-lg"
+                className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-burgundy px-5 py-3.5 text-sm font-semibold text-cream transition-colors duration-300 hover:bg-burgundy-dark hover:shadow-lg sm:w-auto sm:px-7 sm:py-4 sm:hover:-translate-y-1"
               >
                 Explore our cakes <span>→</span>
               </Link>
@@ -711,7 +711,7 @@ export default async function HomePage() {
                 href={WHATSAPP_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 rounded-full border border-olive/25 bg-white/70 px-7 py-4 text-sm font-semibold text-olive-dark transition-all duration-300 hover:-translate-y-1 hover:bg-olive hover:text-cream"
+                className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full border border-olive/25 bg-white/70 px-5 py-3.5 text-sm font-semibold text-olive-dark transition-colors duration-300 hover:bg-olive hover:text-cream sm:w-auto sm:px-7 sm:py-4 sm:hover:-translate-y-1"
               >
                 Get in touch <span>↗</span>
               </a>
