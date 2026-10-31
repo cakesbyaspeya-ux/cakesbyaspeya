@@ -1,9 +1,9 @@
+import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { createServerClient } from '@/lib/supabase/server';
 import { ProductDetailClient } from '@/components/product/ProductDetailClient';
-import { Metadata } from 'next';
-// ... other imports
 
+// ── 1. Dynamic SEO Metadata ──
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const sb = await createServerClient();
@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   if (!product) return { title: 'Cake Not Found' };
 
-  const firstImage = product.product_images?.sort((a: any, b: any) => a.sort_order - b.sort_order)[0]?.url;
+  const firstImage = (product.product_images ?? []).sort((a: any, b: any) => a.sort_order - b.sort_order)[0]?.url;
 
   return {
     title: product.name,
@@ -28,17 +28,19 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     },
   };
 }
+
+// ── 2. The Main Page Component ──
 export default async function CakeDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const sb = await createServerClient();
 
-  // 1. Fetch the current product
+  // Fetch the product
   const { data: product, error } = await sb
     .from('products')
     .select(`
       id, slug, name, short_desc, long_desc, product_type,
       allows_flavour, allows_cake_message, allows_size, base_price,
-      product_images(id, url, sort_order),
+      product_images(*), 
       product_sizes(id, label, weight_lb, price, is_default, sort_order),
       product_variants(id, name, price_delta, sort_order),
       product_flavours(flavours(id, name, price_delta))
@@ -47,22 +49,32 @@ export default async function CakeDetailPage({ params }: { params: Promise<{ slu
     .eq('is_active', true)
     .single();
 
-  if (error || !product) notFound();
+  if (error || !product) {
+    notFound();
+  }
 
-  // 2. Fetch related products (other cakes)
+  // Fetch related products
   const { data: relatedData } = await sb
     .from('products')
     .select(`
       slug, name, product_type, image_layout, base_price,
-      product_images(url, sort_order),
+      product_images(*),
       product_sizes(price),
       product_flavours(flavours(name))
     `)
     .eq('product_type', 'cake')
-    .neq('slug', slug) // Exclude current product
+    .neq('slug', slug)
     .eq('is_active', true)
-    .limit(4); // Get 4 related cakes
+    .limit(4);
 
+  // Fetch reviews
+  const { data: reviews } = await sb
+    .from('reviews')
+    .select('*')
+    .eq('product_id', product.id)
+    .order('created_at', { ascending: false });
+
+  // Format related products
   const relatedProducts = (relatedData ?? []).map((p: any) => {
     const images = (p.product_images ?? []).sort((a: any, b: any) => a.sort_order - b.sort_order).map((i: any) => i.url);
     const validPrices = (p.product_sizes ?? []).map((s: any) => Number(s.price)).filter((n: number) => n > 0);
@@ -71,19 +83,19 @@ export default async function CakeDetailPage({ params }: { params: Promise<{ slu
     return { slug: p.slug, name: p.name, product_type: p.product_type, image_layout: p.image_layout, images, from_price, flavours };
   });
 
+  // Format main product data
   const images = (product.product_images ?? [])
     .sort((a: any, b: any) => a.sort_order - b.sort_order)
-    .map((i: any, index: number) => ({ id: i.id, url: i.url, label: `Design ${index + 1}` }));
+    .map((i: any, index: number) => ({ 
+      id: i.id, 
+      url: i.url, 
+      label: `Design ${index + 1}`,
+      size_prices: i.size_prices // 👈 Pass the JSON prices to the client
+    }));
 
   const sizes = (product.product_sizes ?? []).sort((a: any, b: any) => a.sort_order - b.sort_order);
   const variants = (product.product_variants ?? []).sort((a: any, b: any) => a.sort_order - b.sort_order);
   const flavours = (product.product_flavours ?? []).map((pf: any) => pf.flavours).filter(Boolean);
-
-    const { data: reviews } = await sb
-    .from('reviews')
-    .select('*')
-    .eq('product_id', product.id)
-    .order('created_at', { ascending: false });
 
   return (
     <ProductDetailClient
@@ -93,6 +105,7 @@ export default async function CakeDetailPage({ params }: { params: Promise<{ slu
         base_price: Number(product.base_price), images, sizes, variants, flavours,
       }}
       relatedProducts={relatedProducts}
+      reviews={reviews || []}
     />
   );
 }

@@ -19,7 +19,6 @@ export function ProductEditor({
   const router = useRouter();
   const sb = createClient();
   
-  // ── State ──
   const [formData, setFormData] = useState({
     name: product.name,
     short_desc: product.short_desc || '',
@@ -43,7 +42,6 @@ export function ProductEditor({
   async function handleImageUpload(slotIndex: number, file: File) {
     setUploadingImage(slotIndex);
     
-    // 1. Upload to Supabase Storage
     const fileExt = file.name.split('.').pop();
     const fileName = `${product.id}-${slotIndex}-${Date.now()}.${fileExt}`;
     const { error: uploadError } = await sb.storage
@@ -56,10 +54,8 @@ export function ProductEditor({
       return;
     }
 
-    // 2. Get Public URL
     const { data: { publicUrl } } = sb.storage.from('product-images').getPublicUrl(fileName);
 
-    // 3. Save to database
     const existingImage = images.find(img => img.sort_order === slotIndex);
     
     if (existingImage) {
@@ -68,7 +64,8 @@ export function ProductEditor({
       await sb.from('product_images').insert({
         product_id: product.id,
         url: publicUrl,
-        sort_order: slotIndex
+        sort_order: slotIndex,
+        size_prices: null
       });
     }
 
@@ -82,11 +79,23 @@ export function ProductEditor({
     router.refresh();
   }
 
-  // ── Save Handler ──
+  // 👇 Handler for Specific Design Prices 👇
+  async function handleDesignPriceChange(imageId: string, sizeLabel: string, price: number, currentPrices: any) {
+    const newPrices = { ...(currentPrices || {}) };
+    
+    if (price > 0) {
+      newPrices[sizeLabel] = price;
+    } else {
+      delete newPrices[sizeLabel]; // If cleared, fallback to default size price
+    }
+
+    await sb.from('product_images').update({ size_prices: newPrices }).eq('id', imageId);
+    router.refresh();
+  }
+
   async function handleSave() {
     setSaving(true);
     
-    // 1. Update product details
     await sb.from('products').update({
       name: formData.name,
       short_desc: formData.short_desc,
@@ -95,19 +104,13 @@ export function ProductEditor({
       is_sold_out: formData.is_sold_out,
     }).eq('id', product.id);
 
-    // 2. Update size prices
     for (const size of sizePrices) {
       await sb.from('product_sizes').update({ price: size.price }).eq('id', size.id);
     }
 
-    // 3. Update flavours (Delete all first, then insert selected)
     await sb.from('product_flavours').delete().eq('product_id', product.id);
     if (flavours.length > 0) {
-      const flavourInserts = flavours.map(fid => ({
-        product_id: product.id,
-        flavour_id: fid
-      }));
-      await sb.from('product_flavours').insert(flavourInserts);
+      await sb.from('product_flavours').insert(flavours.map(fid => ({ product_id: product.id, flavour_id: fid })));
     }
 
     setSaving(false);
@@ -122,116 +125,91 @@ export function ProductEditor({
           <h1 className="font-display text-3xl text-ink">Edit: {product.name}</h1>
           <p className="text-sm text-olive-dark mt-1">Update images, prices, and details.</p>
         </div>
-        <button 
-          onClick={handleSave} 
-          disabled={saving}
-          className="rounded-full bg-burgundy px-8 py-3 text-sm font-medium text-cream shadow hover:bg-burgundy-dark transition disabled:opacity-50"
-        >
+        <button onClick={handleSave} disabled={saving} className="rounded-full bg-burgundy px-8 py-3 text-sm font-medium text-cream shadow hover:bg-burgundy-dark transition disabled:opacity-50">
           {saving ? 'Saving...' : 'Save Changes'}
         </button>
       </div>
 
-      {/* ── BASIC INFO ── */}
+      {/* BASIC INFO */}
       <section className="rounded-2xl bg-cream-card p-6 ring-1 ring-black/5 space-y-4">
         <h2 className="font-display text-xl border-b border-olive/20 pb-2">Basic Info</h2>
-        
         <label className="block">
           <span className="mb-1 block text-sm font-medium text-ink">Product Name</span>
-          <input 
-            type="text" 
-            value={formData.name} 
-            onChange={e => setFormData({ ...formData, name: e.target.value })}
-            className="input" 
-          />
+          <input type="text" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="input" />
         </label>
-
         <label className="block">
           <span className="mb-1 block text-sm font-medium text-ink">Short Description</span>
-          <input 
-            type="text" 
-            value={formData.short_desc} 
-            onChange={e => setFormData({ ...formData, short_desc: e.target.value })}
-            className="input" 
-            placeholder="e.g. Rich chocolate with fudge frosting"
-          />
+          <input type="text" value={formData.short_desc} onChange={e => setFormData({ ...formData, short_desc: e.target.value })} className="input" placeholder="e.g. Rich chocolate with fudge frosting" />
         </label>
-
-        <label className="block">
-          <span className="mb-1 block text-sm font-medium text-ink">Long Description</span>
-          <textarea 
-            value={formData.long_desc} 
-            onChange={e => setFormData({ ...formData, long_desc: e.target.value })}
-            className="input" 
-            rows={4}
-          />
-        </label>
-
         <div className="flex gap-6 pt-2">
           <label className="flex items-center gap-2 cursor-pointer">
-            <input 
-              type="checkbox" 
-              checked={formData.is_active} 
-              onChange={e => setFormData({ ...formData, is_active: e.target.checked })}
-              className="accent-burgundy w-4 h-4"
-            />
-            <span className="text-sm font-medium">Active (visible on site)</span>
+            <input type="checkbox" checked={formData.is_active} onChange={e => setFormData({ ...formData, is_active: e.target.checked })} className="accent-burgundy w-4 h-4" />
+            <span className="text-sm font-medium">Active</span>
           </label>
-
           <label className="flex items-center gap-2 cursor-pointer">
-            <input 
-              type="checkbox" 
-              checked={formData.is_sold_out} 
-              onChange={e => setFormData({ ...formData, is_sold_out: e.target.checked })}
-              className="accent-burgundy w-4 h-4"
-            />
+            <input type="checkbox" checked={formData.is_sold_out} onChange={e => setFormData({ ...formData, is_sold_out: e.target.checked })} className="accent-burgundy w-4 h-4" />
             <span className="text-sm font-medium">Sold Out</span>
           </label>
         </div>
       </section>
 
-      {/* ── IMAGES (UP TO 20) ── */}
+      {/* IMAGES & SPECIFIC PRICES */}
       <section className="rounded-2xl bg-cream-card p-6 ring-1 ring-black/5">
         <div className="flex items-center justify-between border-b border-olive/20 pb-2 mb-4">
-          <h2 className="font-display text-xl">Design Gallery (Up to 20)</h2>
-          <span className="text-xs font-medium text-olive-dark bg-olive/10 px-3 py-1 rounded-full">
-            {images.length} / 20 Uploaded
-          </span>
+          <h2 className="font-display text-xl">Design Gallery & Prices</h2>
+          <span className="text-xs font-medium text-olive-dark bg-olive/10 px-3 py-1 rounded-full">{images.length} / 20</span>
         </div>
         
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {Array.from({ length: 20 }).map((_, slot) => {
             const img = images.find(i => i.sort_order === slot);
             return (
-              <div key={slot} className="relative aspect-square rounded-xl bg-cream-dark overflow-hidden ring-1 ring-black/5 flex flex-col items-center justify-center group">
-                {img ? (
-                  <>
-                    <Image src={img.url} alt={`Design ${slot + 1}`} fill className="object-cover" sizes="(max-width: 768px) 50vw, 25vw" />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <button 
-                        onClick={() => handleRemoveImage(img.id)}
-                        className="bg-burgundy text-cream px-3 py-1.5 rounded-full text-xs font-medium hover:bg-burgundy-dark"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                    <span className="absolute bottom-2 left-2 bg-black/60 text-white text-[10px] font-bold px-2 py-0.5 rounded">Design {slot + 1}</span>
-                  </>
-                ) : (
-                  <label className="flex flex-col items-center justify-center w-full h-full cursor-pointer hover:bg-cream-dark/50 transition">
-                    <span className="text-2xl opacity-30 mb-1">🖼</span>
-                    <span className="text-xs text-olive-dark font-medium text-center px-2">
-                      {uploadingImage === slot ? 'Uploading...' : `Upload Slot ${slot + 1}`}
-                    </span>
-                    <input 
-                      type="file" 
-                      accept="image/*" 
-                      className="hidden" 
-                      onChange={(e) => {
+              <div key={slot} className="rounded-xl bg-cream-dark ring-1 ring-black/5 p-3 flex flex-col gap-3">
+                
+                {/* Image Upload Area */}
+                <div className="relative aspect-square w-full rounded-lg overflow-hidden group">
+                  {img ? (
+                    <>
+                      <Image src={img.url} alt={`Design ${slot + 1}`} fill className="object-cover" sizes="33vw" />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <button onClick={() => handleRemoveImage(img.id)} className="bg-burgundy text-cream px-3 py-1.5 rounded-full text-xs font-medium hover:bg-burgundy-dark">Remove</button>
+                      </div>
+                      <span className="absolute bottom-1 left-1 bg-black/60 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">#{slot + 1}</span>
+                    </>
+                  ) : (
+                    <label className="flex flex-col items-center justify-center w-full h-full cursor-pointer hover:bg-cream-dark/50 transition">
+                      <span className="text-xl opacity-30 mb-1">🖼</span>
+                      <span className="text-[10px] text-olive-dark font-medium text-center">{uploadingImage === slot ? 'Uploading...' : `Upload Slot ${slot + 1}`}</span>
+                      <input type="file" accept="image/*" className="hidden" onChange={(e) => {
                         const file = e.target.files?.[0];
                         if (file) handleImageUpload(slot, file);
-                      }}
-                    />
-                  </label>
+                      }} />
+                    </label>
+                  )}
+                </div>
+                
+                {/* Specific Size Prices for THIS design */}
+                {img && (
+                  <details className="text-xs bg-white rounded-lg border border-olive/10">
+                    <summary className="cursor-pointer font-medium text-burgundy p-2">Set Specific Prices</summary>
+                    <div className="p-2 space-y-2 border-t border-olive/10">
+                      {sizes.map(s => (
+                        <div key={s.id} className="flex items-center gap-2">
+                          <span className="w-12 text-olive-dark font-medium">{s.label}</span>
+                          <div className="relative flex-1">
+                            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-olive-dark">৳</span>
+                            <input 
+                              type="number" 
+                              defaultValue={img.size_prices?.[s.label] || ''}
+                              placeholder={String(s.price)} // Shows base price as placeholder
+                              onBlur={(e) => handleDesignPriceChange(img.id, s.label, Number(e.target.value), img.size_prices)}
+                              className="w-full rounded border border-olive/20 pl-6 pr-1 py-1 text-xs outline-none focus:border-burgundy"
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </details>
                 )}
               </div>
             );
@@ -239,74 +217,50 @@ export function ProductEditor({
         </div>
       </section>
 
-      {/* ── SIZES & PRICES ── */}
-      {sizePrices.length > 0 && (
-        <section className="rounded-2xl bg-cream-card p-6 ring-1 ring-black/5">
-          <h2 className="font-display text-xl border-b border-olive/20 pb-2 mb-4">Sizes & Prices</h2>
-          <div className="grid gap-4 sm:grid-cols-2">
-            {sizePrices.map((size, idx) => (
-              <div key={size.id} className="flex items-center justify-between gap-4 bg-white/50 p-3 rounded-xl border border-olive/10">
-                <span className="text-sm font-medium text-ink w-16">{size.label}</span>
-                <div className="relative flex-1">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-olive-dark">৳</span>
-                  <input 
-                    type="number" 
-                    value={size.price}
-                    onChange={e => {
-                      const newPrices = [...sizePrices];
-                      newPrices[idx].price = Number(e.target.value);
-                      setSizePrices(newPrices);
-                    }}
-                    className="input pl-8 py-2" 
-                  />
-                </div>
+      {/* DEFAULT SIZES & FLAVOURS */}
+      <section className="rounded-2xl bg-cream-card p-6 ring-1 ring-black/5">
+        <h2 className="font-display text-xl border-b border-olive/20 pb-2 mb-4">Default Size Prices (Fallback)</h2>
+        <p className="text-xs text-olive-dark mb-4">If a design doesn't have specific prices set above, these default prices will be used.</p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {sizePrices.map((size, idx) => (
+            <div key={size.id} className="flex items-center justify-between gap-4 bg-white/50 p-3 rounded-xl border border-olive/10">
+              <span className="text-sm font-medium text-ink w-16">{size.label}</span>
+              <div className="relative flex-1">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-olive-dark">৳</span>
+                <input type="number" value={size.price} onChange={e => {
+                    const newPrices = [...sizePrices];
+                    newPrices[idx].price = Number(e.target.value);
+                    setSizePrices(newPrices);
+                  }} className="input pl-8 py-2" />
               </div>
-            ))}
-          </div>
-        </section>
-      )}
+            </div>
+          ))}
+        </div>
+      </section>
 
-      {/* ── FLAVOURS ── */}
+      {/* FLAVOURS */}
       <section className="rounded-2xl bg-cream-card p-6 ring-1 ring-black/5">
         <h2 className="font-display text-xl border-b border-olive/20 pb-2 mb-4">Available Flavours</h2>
-        <p className="text-xs text-olive-dark mb-4">Select which flavours customers can choose for this product.</p>
-        
         <div className="flex flex-wrap gap-2">
           {allFlavours.map((f: any) => {
             const isSelected = flavours.includes(f.id);
             return (
-              <button
-                key={f.id}
-                type="button"
-                onClick={() => {
+              <button key={f.id} type="button" onClick={() => {
                   if (isSelected) setFlavours(flavours.filter(id => id !== f.id));
                   else setFlavours([...flavours, f.id]);
-                }}
-                className={`rounded-full border px-4 py-2 text-sm font-medium transition ${
-                  isSelected 
-                    ? 'border-burgundy bg-burgundy text-cream' 
-                    : 'border-olive/30 text-olive-dark hover:border-olive hover:bg-white'
-                }`}
-              >
-                {isSelected ? '✓ ' : '+ '}
-                {f.name}
+                }} className={`rounded-full border px-4 py-2 text-sm font-medium transition ${isSelected ? 'border-burgundy bg-burgundy text-cream' : 'border-olive/30 text-olive-dark hover:border-olive'}`}>
+                {isSelected ? '✓ ' : '+ '}{f.name}
               </button>
             );
           })}
         </div>
       </section>
 
-      {/* Bottom Save Button (Mobile) */}
       <div className="flex justify-end pt-4">
-        <button 
-          onClick={handleSave} 
-          disabled={saving}
-          className="w-full sm:w-auto rounded-full bg-burgundy px-8 py-3.5 text-sm font-medium text-cream shadow hover:bg-burgundy-dark transition disabled:opacity-50"
-        >
+        <button onClick={handleSave} disabled={saving} className="w-full sm:w-auto rounded-full bg-burgundy px-8 py-3.5 text-sm font-medium text-cream shadow hover:bg-burgundy-dark transition disabled:opacity-50">
           {saving ? 'Saving...' : 'Save Changes'}
         </button>
       </div>
-
     </div>
   );
 }

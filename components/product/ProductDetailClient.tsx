@@ -3,7 +3,6 @@
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/components/cart/CartProvider';
-import Link from 'next/link';
 
 const PKR = (n: number) => '৳' + n.toLocaleString('en-BD');
 
@@ -25,25 +24,43 @@ export function ProductDetailClient({ product, relatedProducts = [], reviews = [
   const selectedSize = product.sizes.find((s: any) => s.id === sizeId);
   const selectedVariant = product.variants.find((v: any) => v.id === variantId);
   const selectedFlavour = product.flavours.find((f: any) => f.id === flavourId);
+  
+  // Get the currently selected design image object
   const selectedImageObj = product.images[activeImageIndex] || product.images[0];
 
-  const unitPrice = useMemo(() => {
-    let price = selectedSize?.price ?? product.base_price ?? 0;
-    if (selectedVariant?.price_delta) price += selectedVariant.price_delta;
-    if (selectedFlavour?.price_delta) price += selectedFlavour.price_delta;
-    return price;
-  }, [selectedSize, selectedVariant, selectedFlavour, product.base_price]);
+  // 👇 DYNAMIC PRICING LOGIC 👇
+  // If the selected design has a specific price for this size, use it. 
+  // Otherwise, use the default product size price.
+  const defaultBasePrice = selectedSize?.price ?? product.base_price ?? 0;
+  const specificDesignPrice = selectedImageObj?.size_prices?.[selectedSize?.label || ''];
+  const basePrice = specificDesignPrice ? Number(specificDesignPrice) : defaultBasePrice;
 
-  // Pagination logic
+  const unitPrice = useMemo(() => {
+    let price = basePrice;
+    if (selectedVariant?.price_delta) price += Number(selectedVariant.price_delta);
+    if (selectedFlavour?.price_delta) price += Number(selectedFlavour.price_delta);
+    return price;
+  }, [basePrice, selectedVariant, selectedFlavour]);
+
+  // Pagination logic for Step 1
   const totalPages = Math.ceil(product.images.length / itemsPerPage);
   const currentImages = product.images.slice((page - 1) * itemsPerPage, page * itemsPerPage);
 
   function handleAdd() {
     add({
-      product_id: product.id, product_slug: product.slug, product_name: product.name,
-      image: selectedImageObj?.url || '', design_id: selectedImageObj?.id || null, design_label: selectedImageObj?.label || null,
-      custom_design_url: null, variant: selectedVariant?.name ?? null, flavour: selectedFlavour?.name ?? null,
-      size_label: selectedSize?.label ?? null, cake_message: null, unit_price: unitPrice, qty,
+      product_id: product.id, 
+      product_slug: product.slug, 
+      product_name: product.name,
+      image: selectedImageObj?.url || '', 
+      design_id: selectedImageObj?.id || null, 
+      design_label: selectedImageObj?.label || null,
+      custom_design_url: null, 
+      variant: selectedVariant?.name ?? null, 
+      flavour: selectedFlavour?.name ?? null,
+      size_label: selectedSize?.label ?? null, 
+      cake_message: null, 
+      unit_price: unitPrice, 
+      qty,
     });
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
@@ -69,6 +86,8 @@ export function ProductDetailClient({ product, relatedProducts = [], reviews = [
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
             {currentImages.map((img: any, i: number) => {
               const globalIndex = (page - 1) * itemsPerPage + i;
+              const hasSpecificPrice = img.size_prices && Object.keys(img.size_prices).length > 0;
+              
               return (
                 <button
                   key={img.id}
@@ -77,6 +96,13 @@ export function ProductDetailClient({ product, relatedProducts = [], reviews = [
                 >
                   <div className="relative aspect-square w-full overflow-hidden">
                     <img src={img.url} alt={img.label} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                    
+                    {/* Badge if design has custom prices */}
+                    {hasSpecificPrice && (
+                      <span className="absolute top-2 right-2 bg-burgundy text-cream text-[10px] font-bold px-2 py-1 rounded-full shadow">
+                        Premium
+                      </span>
+                    )}
                   </div>
                   <div className="p-3 text-left">
                     <p className="text-sm font-medium text-ink truncate">{img.label || `Design ${globalIndex + 1}`}</p>
@@ -114,18 +140,34 @@ export function ProductDetailClient({ product, relatedProducts = [], reviews = [
             <h1 className="font-display text-3xl text-ink">{product.name}</h1>
             <p className="text-sm text-burgundy font-medium mt-1">Design: {selectedImageObj?.label}</p>
             
-            {/* Price Display */}
+            {/* Live Price Display */}
             <div className="mt-6 text-4xl font-display text-burgundy">{PKR(unitPrice)}</div>
 
             {product.allows_size && product.sizes.length > 0 && (
               <div className="mt-6">
                 <label className="block text-sm font-medium mb-2 text-ink">Size / weight</label>
                 <div className="flex flex-wrap gap-2">
-                  {product.sizes.map((s: any) => (
-                    <button type="button" key={s.id} onClick={() => setSizeId(s.id)} className={`rounded-full border px-4 py-2 text-sm transition ${sizeId === s.id ? 'border-burgundy bg-burgundy text-cream' : 'border-olive/30 text-olive-dark'}`}>
-                      {s.label} · {PKR(s.price)}
-                    </button>
-                  ))}
+                  {product.sizes.map((s: any) => {
+                    // Calculate dynamic price for this specific size button
+                    const baseForThisSize = selectedImageObj?.size_prices?.[s.label] 
+                      ? Number(selectedImageObj.size_prices[s.label]) 
+                      : Number(s.price);
+                    
+                    let dynamicTotal = baseForThisSize;
+                    if (selectedVariant?.price_delta) dynamicTotal += Number(selectedVariant.price_delta);
+                    if (selectedFlavour?.price_delta) dynamicTotal += Number(selectedFlavour.price_delta);
+
+                    return (
+                      <button 
+                        key={s.id} 
+                        type="button" 
+                        onClick={() => setSizeId(s.id)} 
+                        className={`rounded-full border px-4 py-2 text-sm transition ${sizeId === s.id ? 'border-burgundy bg-burgundy text-cream' : 'border-olive/30 text-olive-dark hover:border-olive'}`}
+                      >
+                        {s.label} · {PKR(dynamicTotal)}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}
