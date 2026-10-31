@@ -38,7 +38,6 @@ export default function CheckoutSummaryPage() {
     setLoading(true);
     setError(null);
 
-    // Map the session storage variables to the exact keys the API expects
     const payload = {
       customer_name: info.name,
       phone: info.phone,
@@ -46,16 +45,18 @@ export default function CheckoutSummaryPage() {
       delivery_method: info.method,
       delivery_date: info.date,
       preferred_time: info.time,
-      area: info.method === 'delivery' ? info.area : null,
-      address: info.method === 'delivery' ? info.address : null,
-      pickup_location: info.method === 'pickup' ? info.pickup_location : null, // 👈 New
+      area: info.area,
+      address: info.address,
+      pickup_location: info.pickup_location,
       special_instructions: info.instructions,
-      cake_message: info.cake_message, // 👈 New Global Cake Message
-      delivery_fee: info.delivery_fee || 0, // 👈 New Delivery Fee
+      cake_message: info.cake_message,
+      
+      // 👇 FIX: Send subtotal without delivery fee, and send delivery fee separately
+      subtotal: total, // `total` from useCart is just items - discount
+      delivery_fee: info.delivery_fee || 0,
       
       promo_code: promoCode,
       discount_amount: discountAmount,
-      final_total: total + (info.delivery_fee || 0), // 👈 Add delivery fee to final total
       
       items: items.map(it => ({
         product_id: it.product_id, 
@@ -66,15 +67,12 @@ export default function CheckoutSummaryPage() {
         custom_design_url: it.custom_design_url,
         flavour: it.flavour, 
         size_label: it.size_label, 
-        cake_message: it.cake_message, // Per-item message (backward compatibility)
+        cake_message: it.cake_message,
         unit_price: it.unit_price, 
         qty: it.qty,
       })),
-      upsells: upsells.map(u => ({ 
-        id: u.id, name: u.name, price: u.price, qty: u.qty 
-      }))
+      upsells: upsells.map(u => ({ id: u.id, name: u.name, price: u.price, qty: u.qty }))
     };
-
     try {
       const res = await fetch('/api/orders', {
         method: 'POST', 

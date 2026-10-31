@@ -5,8 +5,6 @@ import { useRouter } from 'next/navigation';
 import { useCart } from '@/components/cart/CartProvider';
 import { createClient } from '@/lib/supabase/client';
 
-const PKR = (n: number) => '৳' + n.toLocaleString('en-BD');
-
 export default function CustomCakePage() {
   const router = useRouter();
   const { add } = useCart();
@@ -14,12 +12,14 @@ export default function CustomCakePage() {
 
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [occasion, setOccasion] = useState('Birthday');
   const [size, setSize] = useState('1 lb');
   const [flavour, setFlavour] = useState('Vanilla');
   const [qty, setQty] = useState(1);
 
   const SIZES = ['0.5 lb', '1 lb', '2 lb', '3 lb'];
   const FLAVOURS = ['Vanilla', 'Chocolate', 'Red Velvet', 'Pistachio', 'Mango'];
+  const OCCASIONS = ['Birthday', "Anniversary", "Kid's Party", 'Just because'];
 
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -46,13 +46,13 @@ export default function CustomCakePage() {
     add({
       product_id: 'custom-cake',
       product_slug: 'custom-cake',
-      product_name: 'Custom Design Cake',
+      product_name: `Custom Cake (${occasion})`, // Add occasion to name
       image: imageUrl,
       design_label: 'Custom Upload',
       custom_design_url: imageUrl,
       size_label: size,
       flavour: flavour,
-      unit_price: 0, // Price will be confirmed on WhatsApp
+      unit_price: 0, 
       qty: qty,
     });
 
@@ -64,12 +64,11 @@ export default function CustomCakePage() {
       <div className="text-center mb-10">
         <h1 className="font-display text-4xl md:text-5xl text-ink mb-4">Upload Your Own Design</h1>
         <p className="text-olive-dark max-w-xl mx-auto text-sm sm:text-base">
-          Have a specific cake in mind? Upload a reference photo and choose your base options. We will contact you on WhatsApp to confirm the final price based on your design complexity.
+          Have a specific cake in mind? Upload a reference photo and choose your base options. We will contact you on WhatsApp to confirm the final price.
         </p>
       </div>
 
       <div className="grid gap-8 md:grid-cols-2">
-        {/* Upload Area */}
         <div className="rounded-3xl bg-cream-card p-6 ring-1 ring-black/5 flex flex-col items-center justify-center min-h-[300px]">
           {imageUrl ? (
             <div className="relative aspect-square w-full overflow-hidden rounded-2xl">
@@ -86,13 +85,19 @@ export default function CustomCakePage() {
           )}
         </div>
 
-        {/* Options */}
-        <div className="space-y-6">
+        <div className="space-y-5">
+          <div>
+            <label className="block text-sm font-medium mb-2 text-ink">Select Occasion</label>
+            <select value={occasion} onChange={(e) => setOccasion(e.target.value)} className="w-full rounded-lg border border-olive/30 bg-cream-card px-4 py-2.5 outline-none focus:border-burgundy">
+              {OCCASIONS.map((o) => <option key={o} value={o}>{o}</option>)}
+            </select>
+          </div>
+
           <div>
             <label className="block text-sm font-medium mb-2 text-ink">Select Size</label>
             <div className="flex flex-wrap gap-2">
               {SIZES.map((s) => (
-                <button key={s} type="button" onClick={() => setSize(s)} className={`rounded-full border px-4 py-2 text-sm transition ${size === s ? 'border-burgundy bg-burgundy text-cream' : 'border-olive/30 text-olive-dark hover:border-olive'}`}>
+                <button key={s} type="button" onClick={() => setSize(s)} className={`rounded-full border px-4 py-2 text-sm transition ${size === s ? 'border-burgundy bg-burgundy text-cream' : 'border-olive/30 text-olive-dark'}`}>
                   {s}
                 </button>
               ))}
@@ -116,10 +121,7 @@ export default function CustomCakePage() {
           </div>
 
           <div className="pt-4 border-t border-olive/20">
-            <p className="text-sm text-olive-dark mb-4 italic">
-              * Price will be calculated based on your uploaded design. You will pay the standard base price for the size selected, plus any extra design charges confirmed on WhatsApp.
-            </p>
-            <button onClick={handleAddToCart} className="w-full rounded-full bg-burgundy px-6 py-4 text-cream font-medium shadow hover:bg-burgundy-dark transition text-lg">
+            <button onClick={handleAddToCart} className="w-full rounded-full bg-burgundy px-6 py-3.5 text-cream font-medium shadow hover:bg-burgundy-dark transition">
               Add Custom Cake to Order
             </button>
           </div>

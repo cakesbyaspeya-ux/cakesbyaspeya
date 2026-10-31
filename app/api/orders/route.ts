@@ -35,7 +35,7 @@ export async function POST(req: Request) {
     const finalSubtotal = body.final_total !== undefined ? body.final_total : calculatedSubtotal;
     const deliveryFee = Number(body.delivery_fee) || 0;
 
-    // ── 3. Save Order ──
+        // ── 3. Save Order ──
     const { data: order, error: orderError } = await sb
       .from('orders')
       .insert({
@@ -48,11 +48,11 @@ export async function POST(req: Request) {
         preferred_time: body.preferred_time,
         area: body.delivery_method === 'delivery' ? body.area : null,
         address: body.delivery_method === 'delivery' ? body.address : null,
-        pickup_location: body.delivery_method === 'pickup' ? body.pickup_location : null, // 👈 New
-        cake_message: body.cake_message || null, // 👈 New
-        delivery_fee: deliveryFee, // 👈 New
+        pickup_location: body.delivery_method === 'pickup' ? body.pickup_location : null,
+        cake_message: body.cake_message || null,
+        delivery_fee: body.delivery_fee || 0,
         special_instructions: body.special_instructions || null,
-        subtotal: finalSubtotal,
+        subtotal: body.subtotal, // 👈 Saves just the items total
         promo_code: body.promo_code || null,
         discount_amount: body.discount_amount || 0,
         status: 'new'
