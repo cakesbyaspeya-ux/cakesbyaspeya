@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/components/cart/CartProvider';
 import { createClient } from '@/lib/supabase/client';
@@ -14,22 +14,24 @@ export function CustomCakeClient({ product }: { product: any }) {
 
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [occasion, setOccasion] = useState('Birthday');
+  
+  // Use the first variant as default
+  const [variantId, setVariantId] = useState<string>(product.variants[0]?.id || '');
   const [sizeId, setSizeId] = useState<string>(product.sizes.find((s: any) => s.is_default)?.id || product.sizes[0]?.id);
   const [flavourId, setFlavourId] = useState<string>(product.flavours[0]?.id || '');
   const [qty, setQty] = useState(1);
 
-  const OCCASIONS = ['Birthday', "Anniversary", "Kid's Party", 'Just because'];
-
-  // 👇 Dynamic Price Calculation
+  // ── Dynamic Price Calculation ──
+  const selectedVariant = product.variants.find((v: any) => v.id === variantId);
   const selectedSize = product.sizes.find((s: any) => s.id === sizeId);
   const selectedFlavour = product.flavours.find((f: any) => f.id === flavourId);
 
   const basePrice = selectedSize ? Number(selectedSize.price) : 0;
+  const occasionExtra = selectedVariant ? Number(selectedVariant.price_delta) : 0;
   const flavourExtra = selectedFlavour ? Number(selectedFlavour.price_delta) : 0;
   const customDesignFee = product.base_price; // The base price of the product is the custom design fee
 
-  const unitPrice = basePrice + flavourExtra + customDesignFee;
+  const unitPrice = basePrice + occasionExtra + flavourExtra + customDesignFee;
   const totalPrice = unitPrice * qty;
 
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -57,7 +59,7 @@ export function CustomCakeClient({ product }: { product: any }) {
     add({
       product_id: product.id,
       product_slug: 'custom-cake',
-      product_name: `Custom Cake (${occasion})`,
+      product_name: `Custom Cake (${selectedVariant?.name || 'Custom'})`,
       image: imageUrl,
       design_label: 'Custom Upload',
       custom_design_url: imageUrl,
@@ -102,8 +104,12 @@ export function CustomCakeClient({ product }: { product: any }) {
         <div className="space-y-5">
           <div>
             <label className="block text-sm font-medium mb-2 text-ink">Occasion</label>
-            <select value={occasion} onChange={(e) => setOccasion(e.target.value)} className="w-full rounded-lg border border-olive/30 bg-cream-card px-4 py-2.5 outline-none focus:border-burgundy">
-              {OCCASIONS.map((o) => <option key={o} value={o}>{o}</option>)}
+            <select value={variantId} onChange={(e) => setVariantId(e.target.value)} className="w-full rounded-lg border border-olive/30 bg-cream-card px-4 py-2.5 outline-none focus:border-burgundy">
+              {product.variants.map((v: any) => (
+                <option key={v.id} value={v.id}>
+                  {v.name} {v.price_delta > 0 ? `(+${PKR(v.price_delta)})` : ''}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -155,6 +161,12 @@ export function CustomCakeClient({ product }: { product: any }) {
                 <span>Custom Design Fee</span>
                 <span>{PKR(customDesignFee)}</span>
               </div>
+              {occasionExtra > 0 && (
+                <div className="flex justify-between">
+                  <span>Occasion ({selectedVariant?.name})</span>
+                  <span>{PKR(occasionExtra)}</span>
+                </div>
+              )}
               {flavourExtra > 0 && (
                 <div className="flex justify-between">
                   <span>Flavour ({selectedFlavour?.name})</span>
