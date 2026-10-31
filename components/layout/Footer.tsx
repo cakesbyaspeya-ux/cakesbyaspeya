@@ -1,11 +1,10 @@
-
 import Link from 'next/link';
 
 const EXPLORE = [
-  { href: '/cakes', label: 'Our Cakes' },
+  { href: '/cakes', label: 'Cakes' },
   { href: '/desserts', label: 'Desserts' },
   { href: '/custom-cake', label: 'Custom Cakes' },
-  { href: '/about', label: 'Our Story' },
+  { href: '/about', label: 'About Us' },
 ];
 
 const WHATSAPP_URL = 'https://wa.me/8801519409555';
@@ -22,7 +21,7 @@ export function Footer() {
 
       <div className="container-page py-14 md:py-16">
 
-        <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-3">
 
           {/* Brand */}
           <div>
@@ -32,17 +31,17 @@ export function Footer() {
               </h2>
             </Link>
 
-            <p className="mt-2 text-[10px] font-medium uppercase tracking-[0.25em] text-cream/60">
+            <p className="mt-2 text-[10px] font-medium uppercase tracking-[0.24em] text-cream/60">
               Baked with love
             </p>
 
             <p className="mt-5 max-w-sm text-sm leading-7 text-cream/80">
               A little sweetness, a lot of love.
-              Thoughtfully baked cakes and desserts for your
-              most memorable moments.
+              Thoughtfully baked cakes and desserts for
+              your most memorable moments.
             </p>
 
-            {/* WhatsApp contact */}
+            {/* WhatsApp */}
             <a
               href={WHATSAPP_URL}
               target="_blank"
@@ -61,6 +60,7 @@ export function Footer() {
                 <path d="M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 20l1.1-5.2A8.4 8.4 0 1 1 21 11.5Z" />
                 <path d="M9 9a5 5 0 0 0 6 6l1-1.5-2-1-1 1a4 4 0 0 1-2.5-2.5l1-1-1-2L9 9Z" />
               </svg>
+
               Chat with us
             </a>
           </div>
@@ -103,7 +103,7 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Socials & location */}
+          {/* Social media */}
           <div>
             <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-cream/60">
               Stay Connected
@@ -114,7 +114,6 @@ export function Footer() {
               sweet inspirations and updates.
             </p>
 
-            {/* Social icon buttons */}
             <div className="mt-5 flex items-center gap-3">
 
               {/* Instagram */}
@@ -122,7 +121,7 @@ export function Footer() {
                 href={INSTAGRAM_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="Follow Cakes by Aspeya on Instagram"
+                aria-label="Instagram"
                 className="flex h-11 w-11 items-center justify-center rounded-full border border-cream/30 text-cream transition-all duration-300 hover:-translate-y-1 hover:bg-cream hover:text-olive-dark hover:shadow-lg"
               >
                 <svg
@@ -145,7 +144,7 @@ export function Footer() {
                 href={FACEBOOK_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="Follow Cakes by Aspeya on Facebook"
+                aria-label="Facebook"
                 className="flex h-11 w-11 items-center justify-center rounded-full border border-cream/30 text-cream transition-all duration-300 hover:-translate-y-1 hover:bg-cream hover:text-olive-dark hover:shadow-lg"
               >
                 <svg
@@ -173,7 +172,7 @@ export function Footer() {
           </p>
 
           <p className="font-medium uppercase tracking-[0.15em]">
-            Made with love ♡
+            Chattogram · Bangladesh
           </p>
         </div>
       </div>

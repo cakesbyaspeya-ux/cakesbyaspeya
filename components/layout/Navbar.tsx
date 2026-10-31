@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -9,7 +8,7 @@ const NAV_LINKS = [
   { href: '/cakes', label: 'Cakes' },
   { href: '/desserts', label: 'Desserts' },
   { href: '/custom-cake', label: 'Custom Cakes' },
-  { href: '/about', label: 'Our Story' },
+  { href: '/about', label: 'About' },
   { href: '/delivery-policy', label: 'Delivery' },
   { href: '/contact', label: 'Contact' },
 ];
@@ -24,10 +23,13 @@ export function Navbar() {
   }, [pathname]);
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 12);
+    const handleScroll = () => setScrolled(window.scrollY > 10);
 
     handleScroll();
-    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    window.addEventListener('scroll', handleScroll, {
+      passive: true,
+    });
 
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -36,12 +38,12 @@ export function Navbar() {
     <header
       className={`sticky top-0 z-50 transition-all duration-300 ${
         scrolled
-          ? 'border-b border-olive/20 bg-cream/95 shadow-sm backdrop-blur-xl'
+          ? 'border-b border-olive/20 bg-cream/95 shadow-sm backdrop-blur-md'
           : 'border-b border-transparent bg-cream'
       }`}
     >
       <div className="container-page">
-        <div className="flex h-[72px] items-center justify-between gap-4 md:h-[82px]">
+        <div className="flex h-16 items-center justify-between gap-4 md:h-[76px]">
 
           {/* Brand */}
           <Link
@@ -49,16 +51,16 @@ export function Navbar() {
             className="group shrink-0"
             aria-label="Cakes by Aspeya home"
           >
-            <span className="block font-display text-xl leading-none tracking-tight text-olive-dark transition-colors group-hover:text-burgundy sm:text-2xl">
+            <span className="block font-display text-xl leading-none tracking-tight text-ink transition-colors duration-300 group-hover:text-olive-dark sm:text-2xl">
               Cakes by <span className="italic">Aspeya</span>
             </span>
 
-            <span className="mt-1.5 block text-[9px] font-medium uppercase tracking-[0.24em] text-olive sm:text-[10px]">
+            <span className="mt-1 block text-[9px] font-medium uppercase tracking-[0.22em] text-ink-muted sm:text-[10px]">
               Baked with love
             </span>
           </Link>
 
-          {/* Navigation dropdown */}
+          {/* Dropdown navigation */}
           <div className="relative ml-auto">
             <button
               type="button"
@@ -66,13 +68,13 @@ export function Navbar() {
               aria-expanded={open}
               aria-controls="navbar-dropdown"
               aria-label={open ? 'Close navigation menu' : 'Open navigation menu'}
-              className={`flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium transition-all duration-300 ${
+              className={`flex items-center gap-2 rounded-full px-3.5 py-2.5 text-sm font-medium transition-all duration-300 sm:px-4 ${
                 open
                   ? 'bg-olive text-cream'
                   : 'bg-olive/10 text-olive-dark hover:bg-olive/20'
               }`}
             >
-              <span className="hidden sm:inline">Explore</span>
+              <span>Explore</span>
 
               <svg
                 viewBox="0 0 24 24"
@@ -92,10 +94,10 @@ export function Navbar() {
             {/* Dropdown panel */}
             <div
               id="navbar-dropdown"
-              className={`absolute right-0 top-full mt-3 w-60 origin-top-right rounded-2xl border border-olive/10 bg-cream p-3 shadow-xl shadow-olive/10 transition-all duration-200 ${
+              className={`absolute right-0 top-full z-[60] mt-3 w-56 origin-top-right rounded-2xl border border-olive/10 bg-cream p-2.5 shadow-xl shadow-olive/10 transition-all duration-200 ${
                 open
                   ? 'visible translate-y-0 scale-100 opacity-100'
-                  : 'invisible -translate-y-2 scale-95 opacity-0'
+                  : 'invisible -translate-y-2 scale-95 opacity-0 pointer-events-none'
               }`}
             >
               <p className="px-3 pb-2 pt-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-olive/70">
@@ -106,7 +108,7 @@ export function Navbar() {
                 {NAV_LINKS.map((link) => {
                   const active =
                     pathname === link.href ||
-                    pathname.startsWith(link.href + '/');
+                    pathname.startsWith(`${link.href}/`);
 
                   return (
                     <Link
@@ -116,7 +118,7 @@ export function Navbar() {
                       className={`flex items-center justify-between rounded-xl px-3 py-3 text-sm transition-all duration-200 ${
                         active
                           ? 'bg-olive/10 font-medium text-burgundy'
-                          : 'text-ink hover:bg-olive/5 hover:pl-4'
+                          : 'text-ink hover:bg-olive/5'
                       }`}
                     >
                       {link.label}
@@ -131,11 +133,11 @@ export function Navbar() {
             </div>
           </div>
 
-          {/* Cart button — right side */}
+          {/* Cart button on the right */}
           <Link
             href="/cart"
             aria-label="View shopping cart"
-            className="group relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-burgundy text-cream transition-all duration-300 hover:bg-olive hover:shadow-md"
+            className="group flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-burgundy text-cream transition-all duration-300 hover:bg-olive hover:shadow-md sm:h-11 sm:w-11"
           >
             <svg
               viewBox="0 0 24 24"
@@ -154,13 +156,13 @@ export function Navbar() {
         </div>
       </div>
 
-      {/* Click outside to close */}
+      {/* Outside click overlay */}
       {open && (
         <button
           type="button"
           aria-label="Close navigation menu"
-          className="fixed inset-0 z-[-1] cursor-default"
           onClick={() => setOpen(false)}
+          className="fixed inset-0 z-40 cursor-default"
         />
       )}
     </header>

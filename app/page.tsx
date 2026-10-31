@@ -1,10 +1,20 @@
-
 import Link from 'next/link';
 import Image from 'next/image';
 import { getProducts } from '@/lib/products';
 
 const WHATSAPP_URL =
   'https://wa.me/8801519409555?text=Hi%20Cakes%20by%20Aspeya!%20I%20would%20like%20to%20place%20an%20order.';
+
+function shuffleArray(array: string[]) {
+  const arr = [...array];
+
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+
+  return arr;
+}
 
 export default async function HomePage() {
   const [cakes, desserts] = await Promise.all([
@@ -17,43 +27,43 @@ export default async function HomePage() {
     ...desserts.flatMap((dessert) => dessert.images || []),
   ];
 
-  const bgImages = allImages.slice(0, 5);
+  const bgImages = shuffleArray(allImages).slice(0, 6);
 
   return (
     <main className="min-w-0 overflow-x-clip bg-cream text-ink">
 
-      {/* Hero */}
-      <section className="relative flex min-h-[72vh] items-center justify-center overflow-hidden bg-olive-dark sm:min-h-[80vh]">
+      {/* HERO SECTION */}
+      <section className="relative flex min-h-[85vh] items-center justify-center overflow-hidden bg-ink">
 
         {/* Background slideshow */}
-        <div className="absolute inset-0">
+        <div className="absolute inset-0 z-0 overflow-hidden">
           {bgImages.map((img, index) => (
             <Image
-              key={img}
+              key={`${img}-${index}`}
               src={img}
               alt=""
               fill
               sizes="100vw"
-              priority={index === 0}
               className="object-cover"
               style={{
-                opacity: index === 0 ? 0.4 : 0,
+                animation: `fadeSlideshow 24s infinite ${index * 4}s`,
               }}
+              priority={index === 0}
             />
           ))}
 
-          {/* Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/40 to-black/70" />
+          {/* Gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/80" />
         </div>
 
         {/* Hero content */}
-        <div className="relative z-10 mx-auto max-w-4xl px-5 py-20 text-center">
+        <div className="relative z-10 mx-auto max-w-4xl px-4 py-20 text-center">
 
-          <p className="mb-5 text-[10px] font-semibold uppercase tracking-[0.3em] text-cream/75 sm:text-xs">
+          <p className="mb-4 text-xs font-semibold uppercase tracking-[0.3em] text-cream/70">
             Thoughtfully baked · Beautifully made
           </p>
 
-          <h1 className="font-display text-5xl leading-[1.12] text-cream sm:text-6xl md:text-7xl lg:text-8xl">
+          <h1 className="font-display text-5xl leading-[1.1] text-cream sm:text-6xl md:text-7xl lg:text-8xl">
             A little sweetness,
             <br />
             <span className="italic text-cream/90">
@@ -61,43 +71,22 @@ export default async function HomePage() {
             </span>
           </h1>
 
-          <p className="mx-auto mt-6 max-w-xl text-sm leading-7 text-cream/80 sm:text-base sm:leading-8">
+          <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-cream/80 sm:text-lg">
             Discover celebration cakes and delightful desserts,
             thoughtfully prepared to make your special moments
             even sweeter.
           </p>
-
-          <div className="mt-9 flex justify-center">
-            <Link
-              href="/cakes"
-              className="inline-flex items-center gap-3 rounded-full bg-cream px-7 py-3.5 text-sm font-medium text-olive-dark transition-all duration-300 hover:bg-white hover:shadow-lg"
-            >
-              Discover our creations
-
-              <svg
-                viewBox="0 0 24 24"
-                className="h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M5 12h14M13 6l6 6-6 6" />
-              </svg>
-            </Link>
-          </div>
         </div>
       </section>
 
-      {/* Main navigation cards */}
-      <section className="relative z-10 mx-auto -mt-10 max-w-6xl px-4 pb-8 sm:px-6 lg:px-8">
+      {/* FOUR MAIN OPTIONS */}
+      <section className="relative z-10 mx-auto -mt-16 max-w-6xl px-4 pb-8 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
 
-          {/* Cakes */}
+          {/* Explore Cakes */}
           <Link
             href="/cakes"
-            className="group flex flex-col items-center justify-center rounded-2xl bg-white px-6 py-8 text-center shadow-md ring-1 ring-black/5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+            className="group flex flex-col items-center justify-center rounded-3xl bg-white p-8 text-center shadow-xl ring-1 ring-black/5 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl"
           >
             <span className="mb-4 text-4xl transition-transform duration-300 group-hover:scale-110">
               🎂
@@ -107,15 +96,15 @@ export default async function HomePage() {
               Explore Cakes
             </h2>
 
-            <p className="mt-2 text-xs text-olive-dark/80">
-              For every celebration
+            <p className="mt-1 text-xs text-olive-dark">
+              Perfect for every celebration
             </p>
           </Link>
 
-          {/* Desserts */}
+          {/* Explore Desserts */}
           <Link
             href="/desserts"
-            className="group flex flex-col items-center justify-center rounded-2xl bg-white px-6 py-8 text-center shadow-md ring-1 ring-black/5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+            className="group flex flex-col items-center justify-center rounded-3xl bg-white p-8 text-center shadow-xl ring-1 ring-black/5 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl"
           >
             <span className="mb-4 text-4xl transition-transform duration-300 group-hover:scale-110">
               🍰
@@ -125,26 +114,26 @@ export default async function HomePage() {
               Explore Desserts
             </h2>
 
-            <p className="mt-2 text-xs text-olive-dark/80">
+            <p className="mt-1 text-xs text-olive-dark">
               Little bites of joy
             </p>
           </Link>
 
-          {/* Custom cake */}
+          {/* Custom Cake */}
           <Link
             href="/custom-cake"
-            className="group flex flex-col items-center justify-center rounded-2xl bg-burgundy px-6 py-8 text-center shadow-md shadow-burgundy/15 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+            className="group flex flex-col items-center justify-center rounded-3xl bg-burgundy p-8 text-center shadow-xl shadow-burgundy/20 ring-1 ring-burgundy transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl"
           >
             <span className="mb-4 text-4xl transition-transform duration-300 group-hover:scale-110">
               🎨
             </span>
 
             <h2 className="font-display text-xl text-cream">
-              Custom Cakes
+              Custom Cake
             </h2>
 
-            <p className="mt-2 text-xs text-cream/70">
-              Your dream, our creation
+            <p className="mt-1 text-xs text-cream/70">
+              Your design, our creation
             </p>
           </Link>
 
@@ -153,7 +142,7 @@ export default async function HomePage() {
             href={WHATSAPP_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="group flex flex-col items-center justify-center rounded-2xl bg-[#25D366] px-6 py-8 text-center shadow-md shadow-[#25D366]/15 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+            className="group flex flex-col items-center justify-center rounded-3xl bg-[#25D366] p-8 text-center shadow-xl shadow-[#25D366]/20 ring-1 ring-[#25D366] transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl"
           >
             <span className="mb-4 text-4xl transition-transform duration-300 group-hover:scale-110">
               💬
@@ -163,13 +152,32 @@ export default async function HomePage() {
               WhatsApp Us
             </h2>
 
-            <p className="mt-2 text-xs text-white/80">
-              We&apos;d love to hear from you
+            <p className="mt-1 text-xs text-white/80">
+              Questions & orders
             </p>
           </a>
+
         </div>
       </section>
 
+      {/* Slideshow animation */}
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+            @keyframes fadeSlideshow {
+              0%, 20% { opacity: 0; }
+              25%, 45% { opacity: 1; }
+              50%, 100% { opacity: 0; }
+            }
+
+            @media (prefers-reduced-motion: reduce) {
+              .hero-slideshow {
+                animation: none !important;
+              }
+            }
+          `,
+        }}
+      />
     </main>
   );
 }
