@@ -7,7 +7,6 @@ import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { FloatingWhatsAppButton } from '@/components/layout/FloatingWhatsAppButton';
 import { AnnouncementBar } from '@/components/home/AnnouncementBar';
-import { PwaInstallPrompt } from '@/components/layout/PwaInstallPrompt';
 
 // ── Fonts ────────────────────────────────────────────────
 const playfair = Playfair_Display({
@@ -84,7 +83,7 @@ export default function RootLayout({
           <main className="flex-1">{children}</main>
           <Footer />
           <FloatingWhatsAppButton />
-          <PwaInstallPrompt />
+
         </CartProvider>
       </body>
     </html>

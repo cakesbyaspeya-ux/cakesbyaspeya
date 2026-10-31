@@ -1,136 +1,99 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useCart } from '@/components/cart/CartProvider';
 
 const NAV_LINKS = [
-  { href: '/cakes', label: 'Cakes' },
-  { href: '/desserts', label: 'Desserts' },
-  { href: '/about', label: 'About' },
-  { href: '/delivery-policy', label: 'Delivery' },
-  { href: '/contact', label: 'Contact' },
+  { href: '/cakes',           label: 'Cakes' },
+  { href: '/desserts',        label: 'Desserts' },
+  { href: '/custom-cake',     label: 'Custom Cake' },
+  { href: '/about',           label: 'About' },
+  { href: '/contact',         label: 'Contact' },
 ];
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const pathname = usePathname();
 
-  useEffect(() => { setOpen(false); }, [pathname]);
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8);
-    onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   return (
-    <header
-      className={`sticky top-0 z-50 border-b transition-colors duration-200 ${
-        scrolled
-          ? 'border-[var(--color-border)] bg-[var(--color-cream)]/95 backdrop-blur-md'
-          : 'border-transparent bg-[var(--color-cream)]'
-      }`}
-    >
-      <div className="container-page">
-        <div className="flex h-16 items-center justify-between gap-6 md:h-[72px]">
+    <header className={`sticky top-0 z-50 transition-all duration-300 ${
+      scrolled 
+        ? 'bg-cream/90 backdrop-blur-lg shadow-sm border-b border-olive/10 py-3' 
+        : 'bg-cream py-4'
+    }`}>
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        
+        {/* ── LEFT SIDE: Mobile Menu Toggle + Brand ── */}
+        <div className="flex items-center gap-3">
+          {/* Hamburger Button (Mobile Only) */}
+          <button
+            type="button"
+            onClick={() => setOpen((o) => !o)}
+            className="rounded-lg p-1.5 text-ink hover:bg-cream-dark transition-colors md:hidden"
+            aria-label="Toggle menu"
+          >
+            {open ? (
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            ) : (
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+            )}
+          </button>
 
           {/* Brand */}
-          <Link href="/" className="shrink-0" aria-label="Cakes by Aspeya — home">
-            <span className="block font-display text-[1.35rem] leading-none tracking-tight text-ink md:text-2xl">
-              Cakes by Aspeya
-            </span>
-            <span className="mt-1 block text-[0.6rem] font-medium uppercase tracking-[0.24em] text-ink-muted">
-              Baked in Chattogram
-            </span>
+          <Link href="/" className="font-display text-2xl text-ink tracking-tight">
+            Cakes by <span className="text-burgundy italic">Aspeya</span>
           </Link>
+        </div>
 
-          {/* Desktop nav */}
-          <nav aria-label="Primary" className="hidden items-center gap-8 md:flex">
-            {NAV_LINKS.map((link) => {
-              const active = pathname === link.href || pathname.startsWith(link.href + '/');
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  aria-current={active ? 'page' : undefined}
-                  className={`relative py-1 text-[0.9375rem] transition-colors ${
-                    active ? 'text-ink' : 'text-ink-light hover:text-ink'
-                  }`}
-                >
-                  {link.label}
-                  <span
-                    className={`absolute -bottom-1 left-0 h-px bg-burgundy transition-all duration-200 ${
-                      active ? 'w-full' : 'w-0'
-                    }`}
-                  />
-                </Link>
-              );
-            })}
-          </nav>
-
-          {/* Actions */}
-          <div className="flex items-center gap-2 md:gap-3">
+        {/* ── CENTER: Desktop Navigation ── */}
+        <nav className="hidden gap-8 text-sm font-medium md:flex">
+          {NAV_LINKS.map((l) => (
             <Link
-              href="/cart"
-              className="hidden rounded-md border border-[var(--color-border)] bg-transparent px-3.5 py-2 text-[0.875rem] font-medium text-ink transition-colors hover:border-ink sm:inline-flex"
+              key={l.href}
+              href={l.href}
+              className="text-ink/80 hover:text-burgundy transition-colors"
             >
-              Cart
+              {l.label}
             </Link>
-            <Link href="/cakes" className="btn-primary !py-2.5 !px-4 text-[0.875rem]">
-              Order now
-            </Link>
+          ))}
+        </nav>
 
-            {/* Mobile toggle */}
-            <button
-              type="button"
-              onClick={() => setOpen((v) => !v)}
-              className="ml-1 flex h-9 w-9 items-center justify-center rounded-md border border-[var(--color-border)] text-ink md:hidden"
-              aria-label={open ? 'Close menu' : 'Open menu'}
-              aria-expanded={open}
-              aria-controls="mobile-nav"
-            >
-              <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-                {open ? <path d="M6 6l12 12M18 6L6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
-              </svg>
-            </button>
-          </div>
+        {/* ── RIGHT SIDE: Cart Icon ── */}
+        <div className="flex items-center">
+          <Link
+            href="/cart"
+            aria-label="View Cart"
+            className="flex h-11 w-11 items-center justify-center rounded-full bg-burgundy text-cream shadow-md hover:bg-burgundy-dark transition-transform hover:scale-105"
+          >
+            <span className="text-xl">🛒</span>
+          </Link>
         </div>
       </div>
 
-      {/* Mobile panel */}
-      <div
-        id="mobile-nav"
-        className={`overflow-hidden border-t border-[var(--color-border)] bg-[var(--color-cream)] transition-[max-height,opacity] duration-300 md:hidden ${
-          open ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
-        }`}
-      >
-        <nav aria-label="Mobile" className="container-page flex flex-col py-3">
-          {NAV_LINKS.map((link) => {
-            const active = pathname === link.href || pathname.startsWith(link.href + '/');
-            return (
+      {/* ── MOBILE DROPDOWN MENU ── */}
+      {open && (
+        <nav className="absolute left-0 top-full w-full border-b border-olive/10 bg-cream p-4 shadow-xl md:hidden">
+          <div className="flex flex-col space-y-2">
+            {NAV_LINKS.map((l) => (
               <Link
-                key={link.href}
-                href={link.href}
+                key={l.href}
+                href={l.href}
                 onClick={() => setOpen(false)}
-                className={`border-b border-[var(--color-border)] py-3 text-[0.9375rem] last:border-0 ${
-                  active ? 'text-burgundy' : 'text-ink'
-                }`}
+                className="block rounded-lg px-4 py-3 text-base font-medium text-ink hover:bg-cream-dark hover:text-burgundy transition-colors"
               >
-                {link.label}
+                {l.label}
               </Link>
-            );
-          })}
-          <Link
-            href="/cart"
-            onClick={() => setOpen(false)}
-            className="mt-3 rounded-md border border-[var(--color-border)] px-3 py-2.5 text-center text-[0.9375rem] font-medium"
-          >
-            View cart
-          </Link>
+            ))}
+          </div>
         </nav>
-      </div>
+      )}
     </header>
   );
 }
