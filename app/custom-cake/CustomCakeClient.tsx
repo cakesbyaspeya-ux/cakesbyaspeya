@@ -15,22 +15,23 @@ export function CustomCakeClient({ product }: { product: any }) {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   
-  // Use the first variant as default
   const [variantId, setVariantId] = useState<string>(product.variants[0]?.id || '');
   const [sizeId, setSizeId] = useState<string>(product.sizes.find((s: any) => s.is_default)?.id || product.sizes[0]?.id);
   const [flavourId, setFlavourId] = useState<string>(product.flavours[0]?.id || '');
   const [qty, setQty] = useState(1);
 
-  // ── Dynamic Price Calculation ──
+  // ── Selected Options ──
   const selectedVariant = product.variants.find((v: any) => v.id === variantId);
   const selectedSize = product.sizes.find((s: any) => s.id === sizeId);
   const selectedFlavour = product.flavours.find((f: any) => f.id === flavourId);
 
-  const basePrice = selectedSize ? Number(selectedSize.price) : 0;
+  // ── Extras ──
   const occasionExtra = selectedVariant ? Number(selectedVariant.price_delta) : 0;
   const flavourExtra = selectedFlavour ? Number(selectedFlavour.price_delta) : 0;
-  const customDesignFee = product.base_price; // The base price of the product is the custom design fee
+  const customDesignFee = product.base_price; 
 
+  // ── Calculate Final Price for the Selected Size ──
+  const basePrice = selectedSize ? Number(selectedSize.price) : 0;
   const unitPrice = basePrice + occasionExtra + flavourExtra + customDesignFee;
   const totalPrice = unitPrice * qty;
 
@@ -116,16 +117,21 @@ export function CustomCakeClient({ product }: { product: any }) {
           <div>
             <label className="block text-sm font-medium mb-2 text-ink">Size / Weight</label>
             <div className="flex flex-wrap gap-2">
-              {product.sizes.map((s: any) => (
-                <button 
-                  key={s.id} 
-                  type="button" 
-                  onClick={() => setSizeId(s.id)} 
-                  className={`rounded-full border px-4 py-2 text-sm transition ${sizeId === s.id ? 'border-burgundy bg-burgundy text-cream' : 'border-olive/30 text-olive-dark hover:border-olive'}`}
-                >
-                  {s.label} · {PKR(s.price)}
-                </button>
-              ))}
+              {product.sizes.map((s: any) => {
+                // 👇 Dynamically calculate the price for EACH size button
+                const dynamicSizeTotal = Number(s.price) + occasionExtra + flavourExtra + customDesignFee;
+                
+                return (
+                  <button 
+                    key={s.id} 
+                    type="button" 
+                    onClick={() => setSizeId(s.id)} 
+                    className={`rounded-full border px-4 py-2 text-sm transition ${sizeId === s.id ? 'border-burgundy bg-burgundy text-cream' : 'border-olive/30 text-olive-dark hover:border-olive'}`}
+                  >
+                    {s.label} · {PKR(dynamicSizeTotal)}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
