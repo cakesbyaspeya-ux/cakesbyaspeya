@@ -108,7 +108,7 @@ export function CustomCakeClient({ product }: { product: any }) {
             <select value={variantId} onChange={(e) => setVariantId(e.target.value)} className="w-full rounded-lg border border-olive/30 bg-cream-card px-4 py-2.5 outline-none focus:border-burgundy">
               {product.variants.map((v: any) => (
                 <option key={v.id} value={v.id}>
-                  {v.name} {/* 👈 Removed the (+৳300) text here */}
+                  {v.name} {v.price_delta > 0 ? `(+${PKR(v.price_delta)})` : ''}
                 </option>
               ))}
             </select>
@@ -118,7 +118,7 @@ export function CustomCakeClient({ product }: { product: any }) {
             <label className="block text-sm font-medium mb-2 text-ink">Size / Weight</label>
             <div className="flex flex-wrap gap-2">
               {product.sizes.map((s: any) => {
-                // Dynamically calculate the price for EACH size button
+                // 👇 Dynamically calculate the price for EACH size button
                 const dynamicSizeTotal = Number(s.price) + occasionExtra + flavourExtra + customDesignFee;
                 
                 return (
@@ -140,7 +140,7 @@ export function CustomCakeClient({ product }: { product: any }) {
             <select value={flavourId} onChange={(e) => setFlavourId(e.target.value)} className="w-full rounded-lg border border-olive/30 bg-cream-card px-4 py-2.5 outline-none focus:border-burgundy">
               {product.flavours.map((f: any) => (
                 <option key={f.id} value={f.id}>
-                  {f.name} {/* 👈 Removed the (+৳...) text here too */}
+                  {f.name} {f.price_delta > 0 ? `(+${PKR(f.price_delta)})` : ''}
                 </option>
               ))}
             </select>
