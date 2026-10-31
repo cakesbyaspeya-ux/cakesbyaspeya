@@ -10,6 +10,7 @@ export default function CheckoutInfoPage() {
   const { items } = useCart();
   
   const [method, setMethod] = useState<'delivery' | 'pickup'>('delivery');
+  const [pickupLoc, setPickupLoc] = useState('Sanmar Ocean City');
   const [address, setAddress] = useState('');
   const [area, setArea] = useState('');
   const [locating, setLocating] = useState(false);
@@ -21,6 +22,7 @@ export default function CheckoutInfoPage() {
   const minDate = tomorrow.toISOString().split('T')[0];
   
   const AREAS = ['Chawkbazar', 'Kotwali', 'Panchlaish', 'Khulshi', 'Halishahar', 'Double Mooring', 'Pahartali', 'Chandgaon', 'Bayezid', 'Bakalia', 'Patenga', 'Bandar'];
+  const PICKUP_LOCATIONS = ['Sanmar Ocean City', 'Finley Square', 'Women College Circle'];
 
   useEffect(() => {
     if (items.length === 0) router.push('/cart');
@@ -60,11 +62,14 @@ export default function CheckoutInfoPage() {
       phone: formData.get('phone'),
       whatsapp: formData.get('whatsapp') || formData.get('phone'),
       method,
+      pickup_location: method === 'pickup' ? pickupLoc : null,
       date: formData.get('date'),
       time: formData.get('time'),
       area: method === 'delivery' ? area : null,
       address: method === 'delivery' ? address : null,
       instructions: formData.get('instructions'),
+      cake_message: formData.get('cake_message'),
+      delivery_fee: method === 'delivery' ? 70 : 0, // 👈 70 TK auto charge
     };
     
     sessionStorage.setItem('cba_checkout_info', JSON.stringify(data));
@@ -90,16 +95,37 @@ export default function CheckoutInfoPage() {
           <label className="block"><span className="mb-1 block text-sm font-medium text-ink">WhatsApp (if different)</span><input type="tel" name="whatsapp" placeholder="01XXXXXXXXX" className="input" /></label>
         </fieldset>
 
+        {/* 👇 CAKE MESSAGE MOVED HERE 👇 */}
+        <fieldset className="rounded-2xl bg-cream-card p-5 md:p-6 ring-1 ring-black/5">
+          <legend className="px-2 text-sm font-medium text-olive-dark">Greeting & Message</legend>
+          <label className="block">
+            <span className="mb-1 block text-sm font-medium text-ink">Cake Message (What should we write on the cake?)</span>
+            <input type="text" name="cake_message" placeholder="e.g. Happy Birthday, Sarah!" className="input" maxLength={40} />
+          </label>
+        </fieldset>
+
         <fieldset className="rounded-2xl bg-cream-card p-5 md:p-6 ring-1 ring-black/5">
           <legend className="px-2 text-sm font-medium text-olive-dark">Delivery method</legend>
           <div className="grid gap-3 sm:grid-cols-2">
             <label className={`cursor-pointer rounded-xl border p-4 transition ${method === 'delivery' ? 'border-burgundy bg-burgundy/5' : 'border-olive/30'}`}>
-              <input type="radio" checked={method === 'delivery'} onChange={() => setMethod('delivery')} className="mr-2 accent-burgundy" /><span className="text-sm font-medium">Home delivery</span>
+              <input type="radio" checked={method === 'delivery'} onChange={() => setMethod('delivery')} className="mr-2 accent-burgundy" /><span className="text-sm font-medium">Home delivery (৳70)</span>
             </label>
             <label className={`cursor-pointer rounded-xl border p-4 transition ${method === 'pickup' ? 'border-burgundy bg-burgundy/5' : 'border-olive/30'}`}>
               <input type="radio" checked={method === 'pickup'} onChange={() => setMethod('pickup')} className="mr-2 accent-burgundy" /><span className="text-sm font-medium">Store pickup</span>
             </label>
           </div>
+
+          {/* 👇 PICKUP LOCATIONS 👇 */}
+          {method === 'pickup' && (
+            <div className="mt-4 border-t border-olive/20 pt-4">
+              <label className="block">
+                <span className="mb-1 block text-sm font-medium text-ink">Select Pickup Location</span>
+                <select value={pickupLoc} onChange={(e) => setPickupLoc(e.target.value)} className="input" required>
+                  {PICKUP_LOCATIONS.map(loc => <option key={loc} value={loc}>{loc}</option>)}
+                </select>
+              </label>
+            </div>
+          )}
         </fieldset>
 
         <fieldset className="rounded-2xl bg-cream-card p-5 md:p-6 ring-1 ring-black/5 space-y-4">
@@ -118,7 +144,6 @@ export default function CheckoutInfoPage() {
                 <option value="11:00 AM – 2:00 PM">11:00 AM – 2:00 PM</option>
                 <option value="4:00 PM – 7:00 PM">4:00 PM – 7:00 PM</option>
                 <option value="7:00 PM – 9:00 PM">7:00 PM – 9:00 PM</option>
-                <option value="Custom">Custom (discuss on WhatsApp)</option>
               </select>
             </label>
           </div>
@@ -136,7 +161,7 @@ export default function CheckoutInfoPage() {
             </label>
             <div className="block">
               <span className="mb-1 block text-sm font-medium text-ink">Full address</span>
-              <textarea name="address" rows={3} value={address} onChange={(e) => setAddress(e.target.value)} placeholder="House, road, landmark..." className="input" required />
+              <textarea name="address" rows={2} value={address} onChange={(e) => setAddress(e.target.value)} placeholder="House, road, landmark..." className="input" required />
               <button type="button" onClick={handleUseCurrentLocation} disabled={locating} className="mt-2 flex items-center gap-2 text-sm font-medium text-burgundy hover:text-burgundy-dark transition disabled:opacity-50">
                 {locating ? '📍 Getting location...' : '📍 Use my current location'}
               </button>
@@ -144,14 +169,9 @@ export default function CheckoutInfoPage() {
           </fieldset>
         )}
 
-        <fieldset className="rounded-2xl bg-cream-card p-5 md:p-6 ring-1 ring-black/5">
-          <legend className="px-2 text-sm font-medium text-olive-dark">Special instructions</legend>
-          <textarea name="instructions" rows={2} placeholder="Allergies, design notes (optional)" className="input" />
-        </fieldset>
-
         <label className="flex items-start gap-3 rounded-2xl bg-cream-card p-5 ring-1 ring-black/5 cursor-pointer">
           <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="mt-1 w-4 h-4 accent-burgundy" required />
-          <span className="text-sm text-olive-dark leading-tight">I agree to the <strong>24-hour advance notice policy</strong>. I understand that custom cakes cannot be cancelled or refunded once baking has started.</span>
+          <span className="text-sm text-olive-dark leading-tight">I agree to the <strong>24-hour advance notice policy</strong>.</span>
         </label>
 
         <div className="flex justify-end pt-2">

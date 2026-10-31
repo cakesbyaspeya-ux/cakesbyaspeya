@@ -27,13 +27,13 @@ export async function POST(req: Request) {
     // ── 2. Calculate Totals ──
     const reference = generateReference();
     
-    // We use body.final_total (sent from the frontend) if available, 
-    // otherwise we calculate it (includes items + upsells, before discount).
+    // We use body.final_total (sent from the frontend) which already includes delivery fee and discounts
     const cartSubtotal = body.items.reduce((sum: number, item: any) => sum + (item.unit_price * item.qty), 0);
     const upsellSubtotal = (body.upsells || []).reduce((sum: number, u: any) => sum + (u.price * u.qty), 0);
     const calculatedSubtotal = cartSubtotal + upsellSubtotal;
     
     const finalSubtotal = body.final_total !== undefined ? body.final_total : calculatedSubtotal;
+    const deliveryFee = Number(body.delivery_fee) || 0;
 
     // ── 3. Save Order ──
     const { data: order, error: orderError } = await sb
@@ -48,6 +48,9 @@ export async function POST(req: Request) {
         preferred_time: body.preferred_time,
         area: body.delivery_method === 'delivery' ? body.area : null,
         address: body.delivery_method === 'delivery' ? body.address : null,
+        pickup_location: body.delivery_method === 'pickup' ? body.pickup_location : null, // 👈 New
+        cake_message: body.cake_message || null, // 👈 New
+        delivery_fee: deliveryFee, // 👈 New
         special_instructions: body.special_instructions || null,
         subtotal: finalSubtotal,
         promo_code: body.promo_code || null,
@@ -66,10 +69,10 @@ export async function POST(req: Request) {
       product_name: item.product_name,
       design_id: item.design_id || null,    
       design_url: item.image || null,       
-      custom_design_url: item.custom_design_url || null, // 👈 Saved Custom Upload
+      custom_design_url: item.custom_design_url || null, 
       flavour: item.flavour,
       size_label: item.size_label,
-      cake_message: item.cake_message,
+      cake_message: item.cake_message || null, // Keeps per-item message if it exists
       unit_price: item.unit_price,
       qty: item.qty,
       line_total: item.unit_price * item.qty,
@@ -100,13 +103,16 @@ export async function POST(req: Request) {
 👤 *Customer:* ${body.customer_name}
 📞 *Phone:* ${body.phone}
 📅 *Date:* ${body.delivery_date} at ${body.preferred_time}
-${body.delivery_method === 'delivery' ? `📍 *Area:* ${body.area}` : '🏪 *Pickup*'}
+${body.delivery_method === 'delivery' ? `📍 *Area:* ${body.area}` : `🏪 *Pickup:* ${body.pickup_location}`}
 
 📦 *Items:*
 ${orderItems.map((item: any) => `- ${item.qty}x ${item.product_name} ${item.design_label ? `(${item.design_label})` : ''}${item.custom_design_url ? `\n   🖼️ [View Custom Design](${item.custom_design_url})` : ''}`).join('\n')}
 ${body.upsells?.length ? `\n✨ *Extras:*\n${body.upsells.map((u:any) => `- ${u.qty}x ${u.name}`).join('\n')}` : ''}
 
-💰 *Total:* ৳${finalSubtotal.toLocaleString('en-BD')}
+${body.cake_message ? `✍️ *Cake Message:* "${body.cake_message}"\n` : ''}
+💰 *Subtotal:* ৳${(finalSubtotal - deliveryFee).toLocaleString('en-BD')}
+🚚 *Delivery Fee:* ৳${deliveryFee.toLocaleString('en-BD')}
+💵 *Total:* ৳${finalSubtotal.toLocaleString('en-BD')}
 ${body.promo_code ? `🎟️ *Promo Used:* ${body.promo_code} (-৳${body.discount_amount})` : ''}
 
 🔗 [Click to view order](${trackingLink})
@@ -125,12 +131,15 @@ ${body.promo_code ? `🎟️ *Promo Used:* ${body.promo_code} (-৳${body.discou
         preferred_time: body.preferred_time,
         area: body.area,
         address: body.address,
+        pickup_location: body.pickup_location,
+        cake_message: body.cake_message,
+        delivery_fee: deliveryFee,
         special_instructions: body.special_instructions,
-        subtotal: finalSubtotal, // Use discounted total
+        subtotal: finalSubtotal,
         items: orderItems,
         upsells: body.upsells || []
       },
-      'Sanmar Ocean City / 2 No Gate / Women College Mor, Chittagong'
+      'Sanmar Ocean City'
     );
 
     const waUrl = whatsappUrl(message);
